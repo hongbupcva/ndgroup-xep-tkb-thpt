@@ -1,0 +1,851 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NDGroup Xếp TKB THPT V1</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{--gold:#C9A227;--gold-d:#9c7c12;--gold-l:#fbf3dc;--bg:#f7f5ef;--card:#fff;--ink:#1f2328;--muted:#6b7280;--line:#e6e0d0;
+--ok:#15803d;--ok-l:#dcfce7;--warn:#b45309;--warn-l:#fef3c7;--bad:#b91c1c;--bad-l:#fee2e2;--r:10px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 "Segoe UI",Roboto,Arial,sans-serif}
+header{background:#fff;border-bottom:3px solid var(--gold);position:sticky;top:0;z-index:20}
+.hd{display:flex;align-items:center;gap:12px;padding:10px 16px;flex-wrap:wrap}
+.logo{width:38px;height:38px;border-radius:9px;background:linear-gradient(135deg,var(--gold),#e8c95a);display:grid;place-items:center;color:#fff;font-weight:800}
+.brand b{display:block;font-size:16px}.brand span{color:var(--muted);font-size:12px}
+.hd .sp{flex:1}
+nav.steps{display:flex;gap:6px;padding:0 16px 10px;overflow-x:auto}
+nav.steps button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 14px;cursor:pointer;white-space:nowrap;font:inherit}
+nav.steps button.on{background:var(--gold);border-color:var(--gold);color:#fff;font-weight:600}
+nav.steps button i{font-style:normal;display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--gold-l);color:var(--gold-d);margin-right:6px;font-size:12px;font-weight:700}
+nav.steps button.on i{background:#fff}
+main{padding:16px;max-width:1500px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;margin-bottom:14px}
+.card h3{margin:0 0 10px;font-size:15px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card h3 .sp{flex:1}
+.hint{color:var(--muted);font-size:12.5px;margin:4px 0 10px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--muted)}
+input,select,textarea{font:inherit;border:1px solid var(--line);border-radius:7px;padding:6px 8px;background:#fff;color:var(--ink);min-width:0}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--gold-l);border-color:var(--gold)}
+input[type=number]{width:70px}
+input[type=color]{padding:1px;width:38px;height:30px}
+.btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 12px;cursor:pointer;font:inherit;color:var(--ink)}
+.btn:hover{border-color:var(--gold)}
+.btn.pri{background:var(--gold);border-color:var(--gold);color:#fff;font-weight:600}
+.btn.pri:hover{background:var(--gold-d)}
+.btn.sm{padding:3px 8px;font-size:12.5px}
+.btn.del{color:var(--bad)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
+table.t{border-collapse:collapse;width:100%;background:#fff}
+table.t th,table.t td{border-bottom:1px solid var(--line);padding:5px 7px;text-align:left;vertical-align:middle}
+table.t th{background:#fbfaf6;font-weight:600;font-size:12.5px;position:sticky;top:0}
+table.t input:not([type=number]):not([type=color]){width:100%}
+.pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12px;background:var(--gold-l);color:var(--gold-d)}
+.pill.ok{background:var(--ok-l);color:var(--ok)}.pill.warn{background:var(--warn-l);color:var(--warn)}.pill.bad{background:var(--bad-l);color:var(--bad)}
+/* phân công */
+table.pc td.c{cursor:pointer;text-align:center;min-width:64px;font-size:12px;border-left:1px solid var(--line)}
+table.pc td.c:hover{background:var(--gold-l)}
+table.pc td.c .n{font-weight:700}
+table.pc td.c .g{display:block;color:var(--muted);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90px;margin:auto}
+table.pc th{text-align:center}
+/* TKB */
+table.tkb{border-collapse:separate;border-spacing:3px;width:100%;table-layout:fixed}
+table.tkb th{font-size:12.5px;color:var(--muted);font-weight:600;padding:4px}
+table.tkb td.lb{width:62px;font-size:12px;color:var(--muted);text-align:center}
+table.tkb td.s{height:52px;border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer;padding:3px 5px;font-size:12.5px;position:relative;vertical-align:top}
+table.tkb td.s b{display:block;font-size:13px}
+table.tkb td.s small{color:#4b5563}
+table.tkb td.s.sel{outline:3px solid var(--gold);outline-offset:-1px}
+table.tkb td.s.tok{box-shadow:inset 0 0 0 3px #22c55e}
+table.tkb td.s.twarn{box-shadow:inset 0 0 0 3px #f59e0b}
+table.tkb td.s.tbad{opacity:.45}
+table.tkb td.s .lk{position:absolute;right:4px;top:2px;font-size:11px}
+table.tkb tr.sep td{height:6px}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:8px}
+.legend span::before{content:"";display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:4px;vertical-align:-2px}
+.legend .a::before{box-shadow:inset 0 0 0 3px #22c55e}.legend .b::before{box-shadow:inset 0 0 0 3px #f59e0b}.legend .c::before{background:#ddd}
+table.big{border-collapse:collapse;font-size:11.5px;background:#fff}
+table.big th,table.big td{border:1px solid var(--line);padding:2px 4px;white-space:nowrap;text-align:center}
+table.big td.x{cursor:pointer}
+table.big td.x:hover{outline:2px solid var(--gold)}
+table.big th.d{background:var(--gold-l)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.stat{border:1px solid var(--line);border-radius:9px;padding:9px 12px;background:#fffdf7}
+.stat b{display:block;font-size:20px}.stat span{font-size:12px;color:var(--muted)}
+.prog{height:10px;background:#eee;border-radius:9px;overflow:hidden}
+.prog div{height:100%;background:linear-gradient(90deg,var(--gold),#e8c95a);width:0;transition:width .2s}
+.list{max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:8px}
+.list div{padding:6px 10px;border-bottom:1px solid var(--line);cursor:pointer;font-size:13px}
+.list div:hover{background:var(--gold-l)}
+.list div.on{background:var(--gold-l);font-weight:600}
+.issues li{margin:3px 0}
+.layout4{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px}
+@media (max-width:1000px){.layout4{grid-template-columns:1fr}}
+/* modal */
+.mask{position:fixed;inset:0;background:rgba(20,20,20,.35);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+.mask.on{display:flex}
+.modal{background:#fff;border-radius:12px;max-width:720px;width:100%;max-height:90vh;overflow:auto;padding:16px 18px;border-top:4px solid var(--gold)}
+.modal h3{margin:0 0 10px}
+table.busy{border-collapse:separate;border-spacing:3px}
+table.busy td.b{width:46px;height:30px;border:1px solid var(--line);border-radius:6px;cursor:pointer;text-align:center;font-size:12px}
+table.busy td.b.on{background:var(--bad-l);border-color:#fca5a5;color:var(--bad)}
+table.busy th{font-size:12px;color:var(--muted);font-weight:600;cursor:pointer}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1f2328;color:#fff;padding:9px 16px;border-radius:9px;display:none;z-index:60;max-width:90vw}
+.guide{background:var(--gold-l);border:1px solid #f0dfa6;border-radius:var(--r);padding:10px 14px;margin-bottom:14px;font-size:13px}
+.guide b{color:var(--gold-d)}
+#print{display:none}
+@media print{
+  @page{size:A4 landscape;margin:10mm}
+  body{background:#fff}
+  header,main,#toast,.mask{display:none!important}
+  #print{display:block}
+  .pg{page-break-after:always;font-family:"Times New Roman",serif;color:#000}
+  .pg:last-child{page-break-after:auto}
+  .pg .top{display:flex;justify-content:space-between;font-size:13px}
+  .pg h2{text-align:center;margin:8px 0 2px;font-size:20px}
+  .pg .sub{text-align:center;margin-bottom:8px;font-size:13px}
+  .pg table{border-collapse:collapse;width:100%}
+  .pg th,.pg td{border:1px solid #000;padding:4px;text-align:center;font-size:12.5px}
+  .pg.small th,.pg.small td{font-size:9px;padding:1px 2px}
+  .pg .sign{display:flex;justify-content:flex-end;margin-top:10px;font-size:13px;text-align:center}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="hd">
+    <div class="logo">TKB</div>
+    <div class="brand"><b>NDGroup Xếp TKB THPT V1</b><span id="hdSchool">Xếp thời khoá biểu tự động cho trường THPT · GDPT 2018 · 2 buổi</span></div>
+    <div class="sp"></div>
+    <button class="btn" data-act="sample">Nạp dữ liệu mẫu</button>
+    <button class="btn" data-act="openFile">Mở file</button>
+    <button class="btn pri" data-act="saveFile">Lưu file dữ liệu</button>
+    <button class="btn del" data-act="clearAll">Làm mới</button>
+    <input type="file" id="fileIn" accept=".json" hidden>
+  </div>
+  <nav class="steps" id="steps"></nav>
+</header>
+<main id="app"></main>
+<div id="print"></div>
+<div class="mask" id="mask"><div class="modal" id="modal"></div></div>
+<div id="toast"></div>
+
+<!-- ================= ĐỘNG CƠ XẾP (chạy được cả trong Web Worker) ================= -->
+<script id="engine-src">
+function createEngine(inp){
+  const D=inp.D,P=inp.P,AM=inp.AM,N=D*P;
+  const CL=inp.classes,TE=inp.teachers,SU=inp.subjects,UN=inp.units;
+  const C=Math.max(1,CL.length),T=Math.max(1,TE.length),S=Math.max(1,SU.length),U=UN.length;
+  const W=Object.assign({cgap:100,lead:30,spread:12,tgap:6,tday:2,two:3,avoid:5},inp.weights||{});
+  const cg=new Int32Array(C*N).fill(-1),tg=new Int32Array(T*N).fill(-1),pos=new Int32Array(U).fill(-1);
+  const subDay=new Int16Array(C*D*S),tDay=new Int16Array(T*D),tDays=new Int16Array(T),room=new Int16Array(S*N);
+  const sess=p=>p<AM?0:1;
+  const avoidM=new Uint8Array(S*P),forbidM=new Uint8Array(S*P);
+  SU.forEach((x,i)=>{(x.avoid||[]).forEach(p=>{if(p>=0&&p<P)avoidM[i*P+p]=1});(x.forbid||[]).forEach(p=>{if(p>=0&&p<P)forbidM[i*P+p]=1})});
+  const mk=list=>{const a=new Uint8Array(N);(list||[]).forEach(s=>{if(s>=0&&s<N)a[s]=1});return a};
+  const tBusy=TE.map(t=>mk(t.busy)),cBusy=CL.map(c=>mk(c.busy));
+  function why0(u,s){
+    const x=UN[u],p=s%P;
+    if(s<0||s>=N)return 'Ngoài lưới';
+    if(p+x.len>P)return 'Tiết đôi vượt quá số tiết/ngày';
+    if(sess(p)!==sess(p+x.len-1))return 'Tiết đôi không được vắt qua hai buổi';
+    if(x.sess.indexOf(sess(p))<0)return 'Môn này của lớp chỉ học buổi '+(x.sess[0]===0?'sáng':'chiều');
+    for(let k=0;k<x.len;k++){
+      if(cBusy[x.c][s+k])return 'Lớp '+CL[x.c].name+' nghỉ tiết này';
+      if(x.t>=0&&tBusy[x.t][s+k])return 'GV '+TE[x.t].name+' đăng ký bận tiết này';
+      if(forbidM[x.sub*P+(p+k)])return 'Môn '+SU[x.sub].name+' không xếp vào tiết này';
+    }
+    return '';
+  }
+  const allow=[],mask=[];
+  for(let u=0;u<U;u++){
+    const m=new Uint8Array(N),list=[];const f=UN[u].fixed;
+    if(f>=0){if(f<N&&f%P+UN[u].len<=P){list.push(f);m[f]=1}}
+    else for(let s=0;s<N;s++)if(!why0(u,s)){list.push(s);m[s]=1}
+    allow.push(list);mask.push(m);
+  }
+  function place(u,s){
+    const x=UN[u];pos[u]=s;
+    for(let k=0;k<x.len;k++){cg[x.c*N+s+k]=u;if(x.t>=0)tg[x.t*N+s+k]=u;room[x.sub*N+s+k]++}
+    const d=(s/P)|0;subDay[(x.c*D+d)*S+x.sub]+=x.len;
+    if(x.t>=0){if(tDay[x.t*D+d]===0)tDays[x.t]++;tDay[x.t*D+d]+=x.len}
+  }
+  function unplace(u){
+    const x=UN[u],s=pos[u];if(s<0)return;pos[u]=-1;
+    for(let k=0;k<x.len;k++){cg[x.c*N+s+k]=-1;if(x.t>=0)tg[x.t*N+s+k]=-1;room[x.sub*N+s+k]--}
+    const d=(s/P)|0;subDay[(x.c*D+d)*S+x.sub]-=x.len;
+    if(x.t>=0){tDay[x.t*D+d]-=x.len;if(tDay[x.t*D+d]===0)tDays[x.t]--}
+  }
+  function ok1(u,s){
+    if(!mask[u][s])return false;
+    const x=UN[u],d=(s/P)|0,r=SU[x.sub].rooms||0;
+    for(let k=0;k<x.len;k++){
+      if(cg[x.c*N+s+k]>=0)return false;
+      if(x.t>=0&&tg[x.t*N+s+k]>=0)return false;
+      if(r>0&&room[x.sub*N+s+k]>=r)return false;
+    }
+    const md=SU[x.sub].maxDay||99;if(subDay[(x.c*D+d)*S+x.sub]+x.len>md)return false;
+    if(x.t>=0){const t=TE[x.t],td=tDay[x.t*D+d];
+      if(t.maxDay&&td+x.len>t.maxDay)return false;
+      if(t.maxDays&&td===0&&tDays[x.t]>=t.maxDays)return false}
+    return true;
+  }
+  function why1(u,s){
+    const x=UN[u],d=(s/P)|0,r=SU[x.sub].rooms||0;
+    for(let k=0;k<x.len;k++){
+      if(s+k>=N)return 'Ngoài lưới';
+      const v=cg[x.c*N+s+k];if(v>=0)return 'Lớp đã có tiết '+SU[UN[v].sub].name+' ở tiết này';
+      if(x.t>=0){const w=tg[x.t*N+s+k];if(w>=0)return 'Trùng giờ: GV '+TE[x.t].name+' đang dạy lớp '+CL[UN[w].c].name};
+      if(r>0&&room[x.sub*N+s+k]>=r)return 'Hết phòng/sân môn '+SU[x.sub].name+' (tối đa '+r+' lớp cùng lúc)';
+    }
+    const md=SU[x.sub].maxDay||99;if(subDay[(x.c*D+d)*S+x.sub]+x.len>md)return 'Môn '+SU[x.sub].name+' vượt '+md+' tiết/ngày của lớp';
+    if(x.t>=0){const t=TE[x.t],td=tDay[x.t*D+d];
+      if(t.maxDay&&td+x.len>t.maxDay)return 'GV '+t.name+' vượt '+t.maxDay+' tiết/ngày';
+      if(t.maxDays&&td===0&&tDays[x.t]>=t.maxDays)return 'GV '+t.name+' đã dạy đủ '+t.maxDays+' ngày/tuần'}
+    return '';
+  }
+  function explain(u,s){
+    if(!mask[u][s])return UN[u].fixed>=0?'Tiết cố định/đã khoá':(why0(u,s)||'Không hợp lệ');
+    return why1(u,s);
+  }
+  const seen=new Int32Array(S);let stamp=1;
+  function classDay(c,d){
+    let cost=0;const base=c*N+d*P,m=CL[c].main;
+    for(let ss=0;ss<2;ss++){
+      const ps=ss?AM:0,pe=ss?P:AM;let f=-1,l=-1,n=0;
+      for(let p=ps;p<pe;p++)if(cg[base+p]>=0){if(f<0)f=p;l=p;n++}
+      if(f<0)continue;
+      cost+=W.cgap*((l-f+1)-n);
+      cost+=(ss===m?W.lead:W.lead/4)*(f-ps);
+    }
+    stamp++;let prev=-1;
+    for(let p=0;p<P;p++){
+      const u=cg[base+p];if(u<0){prev=-1;continue}
+      const sb=UN[u].sub;if(avoidM[sb*P+p])cost+=W.avoid;
+      if(u===prev)continue;prev=u;
+      if(seen[sb]===stamp)cost+=W.spread;else seen[sb]=stamp;
+    }
+    return cost;
+  }
+  function teacherDay(t,d){
+    if(t<0)return 0;
+    let cost=0,ses=0;const base=t*N+d*P;
+    for(let ss=0;ss<2;ss++){
+      const ps=ss?AM:0,pe=ss?P:AM;let f=-1,l=-1,n=0;
+      for(let p=ps;p<pe;p++)if(tg[base+p]>=0){if(f<0)f=p;l=p;n++}
+      if(f<0)continue;ses++;cost+=W.tgap*((l-f+1)-n);
+    }
+    if(ses)cost+=W.tday;if(ses===2)cost+=W.two;
+    return cost;
+  }
+  function fullCost(){
+    let c=0;for(let i=0;i<CL.length;i++)for(let d=0;d<D;d++)c+=classDay(i,d);
+    for(let i=0;i<TE.length;i++)for(let d=0;d<D;d++)c+=teacherDay(i,d);
+    return c;
+  }
+  function keysCost(list){let c=0;for(let i=0;i<list.length;i+=3)c+=list[i]===0?classDay(list[i+1],list[i+2]):teacherDay(list[i+1],list[i+2]);return c}
+  function keysOf(u,s,out){if(s<0)return;const x=UN[u],d=(s/P)|0;out.push(0,x.c,d);if(x.t>=0)out.push(1,x.t,d)}
+  function insDelta(u,s){const k=[];keysOf(u,s,k);const b=keysCost(k);place(u,s);const a=keysCost(k);unplace(u);return a-b}
+  function unitsInClassDay(c,d,sub){const r=[];let prev=-1;for(let p=0;p<P;p++){const v=cg[c*N+d*P+p];if(v>=0&&v!==prev&&UN[v].sub===sub)r.push(v);prev=v}return r}
+  function unitsOfTeacherDay(t,d){const r=[];let prev=-1;for(let p=0;p<P;p++){const v=tg[t*N+d*P+p];if(v>=0&&v!==prev)r.push(v);prev=v}return r}
+  function conflicts(u,s){
+    const x=UN[u],d=(s/P)|0,set=[];
+    const add=v=>{if(UN[v].fixed>=0)return false;if(set.indexOf(v)<0)set.push(v);return true};
+    const r=SU[x.sub].rooms||0;
+    for(let k=0;k<x.len;k++){
+      const v=cg[x.c*N+s+k];if(v>=0&&!add(v))return null;
+      if(x.t>=0){const w=tg[x.t*N+s+k];if(w>=0&&!add(w))return null}
+      if(r>0){
+        let used=room[x.sub*N+s+k];
+        for(const z of set)if(UN[z].sub===x.sub&&pos[z]<=s+k&&pos[z]+UN[z].len>s+k)used--;
+        if(used>=r){let found=false;
+          for(let cc=0;cc<CL.length&&!found;cc++){const z=cg[cc*N+s+k];if(z>=0&&UN[z].sub===x.sub&&set.indexOf(z)<0&&UN[z].fixed<0){set.push(z);found=true}}
+          if(!found)return null}
+      }
+    }
+    const md=SU[x.sub].maxDay||99;
+    let cnt=subDay[(x.c*D+d)*S+x.sub];for(const z of set)if(UN[z].c===x.c&&UN[z].sub===x.sub&&((pos[z]/P)|0)===d)cnt-=UN[z].len;
+    if(cnt+x.len>md){for(const z of unitsInClassDay(x.c,d,x.sub)){if(cnt+x.len<=md)break;if(set.indexOf(z)>=0)continue;if(!add(z))return null;cnt-=UN[z].len}if(cnt+x.len>md)return null}
+    if(x.t>=0){const t=TE[x.t];let td=tDay[x.t*D+d];for(const z of set)if(UN[z].t===x.t&&((pos[z]/P)|0)===d)td-=UN[z].len;
+      if(t.maxDay&&td+x.len>t.maxDay){for(const z of unitsOfTeacherDay(x.t,d)){if(td+x.len<=t.maxDay)break;if(set.indexOf(z)>=0)continue;if(!add(z))return null;td-=UN[z].len}if(td+x.len>t.maxDay)return null}
+      if(t.maxDays&&td===0&&tDay[x.t*D+d]===0&&tDays[x.t]>=t.maxDays)return null}
+    return set;
+  }
+  function load(arr){
+    for(let u=0;u<U;u++)if(UN[u].fixed>=0&&pos[u]<0&&ok1(u,UN[u].fixed))place(u,UN[u].fixed);
+    if(arr)for(let u=0;u<U;u++)if(pos[u]<0&&arr[u]>=0&&arr[u]<N&&ok1(u,arr[u]))place(u,arr[u]);
+  }
+  function stats(){
+    let cgap=0,tgap=0,placed=0;const un=[];
+    for(let u=0;u<U;u++){if(pos[u]>=0)placed++;else un.push(u)}
+    const gap=(g,id)=>{let n=0;for(let d=0;d<D;d++)for(let ss=0;ss<2;ss++){const ps=ss?AM:0,pe=ss?P:AM;let f=-1,l=-1,c=0;for(let p=ps;p<pe;p++)if(g[id*N+d*P+p]>=0){if(f<0)f=p;l=p;c++}if(f>=0)n+=(l-f+1)-c}return n};
+    for(let i=0;i<CL.length;i++)cgap+=gap(cg,i);
+    for(let i=0;i<TE.length;i++)tgap+=gap(tg,i);
+    let lessons=0,done=0;for(let u=0;u<U;u++){lessons+=UN[u].len;if(pos[u]>=0)done+=UN[u].len}
+    return {units:U,placed,unplaced:un,lessons,done,classGaps:cgap,teacherGaps:tgap,cost:Math.round(fullCost())};
+  }
+  function solve(opts,onProg){
+    const t0=Date.now(),limit=Math.max(1,opts.time||15)*1000,end=t0+limit;
+    if(opts.reset)for(let u=0;u<U;u++)if(UN[u].fixed<0)unplace(u);
+    load(null);
+    const tLoad=new Float64Array(T);for(const x of UN)if(x.t>=0)tLoad[x.t]+=x.len;
+    const diff=u=>allow[u].length-(UN[u].len===2?15:0)-(UN[u].t>=0?tLoad[UN[u].t]*0.4:0)-((SU[UN[u].sub].rooms||0)>0?8:0);
+    let queue=[];for(let u=0;u<U;u++)if(pos[u]<0&&UN[u].fixed<0&&allow[u].length)queue.push(u);
+    queue.sort((a,b)=>diff(b)-diff(a)+(Math.random()-.5)*2);
+    const ej=new Float64Array(U);let lastP=0,it=0;
+    const prog=(ph,pct)=>{const now=Date.now();if(now-lastP<200)return;lastP=now;let pl=0;for(let u=0;u<U;u++)if(pos[u]>=0)pl++;onProg&&onProg({phase:ph,placed:pl,total:U,pct:Math.min(99,pct)})};
+    function insertOne(u){
+      let best=-1,bc=1e18;
+      for(const s of allow[u])if(ok1(u,s)){const c=insDelta(u,s)+Math.random()*4;if(c<bc){bc=c;best=s}}
+      if(best>=0){place(u,best);return true}
+      let bs=-1,bset=null,bsc=1e18;
+      for(const s of allow[u]){const set=conflicts(u,s);if(!set)continue;let sc=Math.random()*0.9;for(const v of set)sc+=1+ej[v]*0.35;if(sc<bsc){bsc=sc;bs=s;bset=set}}
+      if(bs<0)return false;
+      for(const v of bset){unplace(v);ej[v]++}
+      if(ok1(u,bs))place(u,bs);else queue.unshift(u);
+      for(const v of bset){let b2=-1,c2=1e18;for(const s of allow[v])if(ok1(v,s)){const c=insDelta(v,s)+Math.random()*4;if(c<c2){c2=c;b2=s}}
+        if(b2>=0)place(v,b2);else queue.push(v)}
+      return true;
+    }
+    const failed=[],att=new Int32Array(U);
+    let cBest=1e9,cPos=Int32Array.from(pos),cQueue=queue.slice();
+    while(queue.length&&Date.now()<t0+limit*0.6){
+      const u=queue.pop();if(pos[u]>=0)continue;
+      if(++att[u]>40){failed.push(u);continue}
+      if(!insertOne(u))failed.push(u);
+      if(queue.length+failed.length<cBest){cBest=queue.length+failed.length;cPos=Int32Array.from(pos);cQueue=queue.slice()}
+      if((++it&63)===0)prog('Đang xếp',((U-queue.length)/U)*70);
+    }
+    if(queue.length+failed.length>cBest){for(let u=0;u<U;u++)unplace(u);for(let u=0;u<U;u++)if(cPos[u]>=0)place(u,cPos[u])}
+    queue=[];for(let u=0;u<U;u++)if(pos[u]<0&&UN[u].fixed<0&&allow[u].length){
+      let b2=-1,c2=1e18;for(const s of allow[u])if(ok1(u,s)){const c=insDelta(u,s);if(c<c2){c2=c;b2=s}}
+      if(b2>=0)place(u,b2);else queue.push(u)}
+    att.fill(0);
+    // tối ưu bằng mô phỏng luyện kim
+    const movable=[];for(let u=0;u<U;u++)if(UN[u].fixed<0)movable.push(u);
+    let cur=fullCost();
+    const unCount=()=>{let n=0;for(let u=0;u<U;u++)if(pos[u]<0)n++;return n};
+    let bestUn=unCount(),bestCost=cur,bestPos=Int32Array.from(pos);
+    const T0=30,T1=0.3,sa0=Date.now(),saLen=Math.max(1,end-sa0);let temp=T0;
+    const keys=[];
+    if(movable.length)while(true){
+      it++;
+      if((it&255)===0){const now=Date.now();if(now>=end)break;const fr=(now-sa0)/saLen;temp=T0*Math.pow(T1/T0,fr);prog('Đang tối ưu',70+fr*30)}
+      if(queue.length&&(it%40===0)){const u=queue.pop();if(pos[u]<0&&!insertOne(u))failed.push(u);cur=fullCost();
+        const un=unCount();if(un<bestUn||(un===bestUn&&cur<bestCost)){bestUn=un;bestCost=cur;bestPos=Int32Array.from(pos)}continue}
+      const u=movable[(Math.random()*movable.length)|0],s1=pos[u];if(s1<0)continue;
+      const al=allow[u];if(al.length<2)continue;
+      const s2=al[(Math.random()*al.length)|0];if(s2===s1)continue;
+      const x=UN[u];let v=cg[x.c*N+s2];if(v===u)v=-1;
+      if(v>=0){const y=UN[v];if(y.fixed>=0||y.len!==x.len||pos[v]!==s2||!mask[v][s1])continue}
+      keys.length=0;keysOf(u,s1,keys);keysOf(u,s2,keys);if(v>=0){keysOf(v,s1,keys);keysOf(v,s2,keys)}
+      const before=keysCost(keys);
+      unplace(u);if(v>=0)unplace(v);
+      let ok=ok1(u,s2);
+      if(ok){place(u,s2);if(v>=0){ok=ok1(v,s1);if(ok)place(v,s1);else unplace(u)}}
+      if(!ok){place(u,s1);if(v>=0)place(v,s2);continue}
+      const delta=keysCost(keys)-before;
+      if(delta<=0||Math.random()<Math.exp(-delta/temp)){
+        cur+=delta;
+        if(cur<bestCost-1e-9){const un=unCount();if(un<=bestUn){bestUn=un;bestCost=cur;bestPos=Int32Array.from(pos)}}
+      }else{unplace(u);if(v>=0)unplace(v);place(u,s1);if(v>=0)place(v,s2)}
+    }
+    const un=unCount();
+    if(un>bestUn||(un===bestUn&&cur>bestCost)){for(let u=0;u<U;u++)unplace(u);for(let u=0;u<U;u++)if(bestPos[u]>=0)place(u,bestPos[u])}
+    return {pos:Array.from(pos),stats:stats(),ms:Date.now()-t0};
+  }
+  function checkMove(u,s2,apply){
+    const x=UN[u],s1=pos[u];
+    if(s2===s1)return {self:true};
+    let v=cg[x.c*N+s2];if(v===u)v=-1;
+    if(x.len===2&&v<0&&s2%P+1<P){const w=cg[x.c*N+s2+1];if(w>=0&&w!==u)return {ok:false,why:'Cần 2 tiết trống liền nhau cho tiết đôi'}}
+    if(v>=0){
+      if(s1<0)return {ok:false,why:'Ô đã có tiết, chọn ô trống'};
+      const y=UN[v];
+      if(y.fixed>=0)return {ok:false,why:'Tiết '+SU[y.sub].name+' đã khoá/cố định'};
+      if(y.len!==x.len||pos[v]!==s2)return {ok:false,why:'Chỉ đổi tiết đơn với tiết đơn, tiết đôi với tiết đôi'};
+    }
+    const keys=[];keysOf(u,s1,keys);keysOf(u,s2,keys);if(v>=0){keysOf(v,s1,keys);keysOf(v,s2,keys)}
+    const before=keysCost(keys);
+    unplace(u);if(v>=0)unplace(v);
+    let why=explain(u,s2);
+    if(!why){place(u,s2);if(v>=0){why=explain(v,s1);if(why)why='Tiết '+SU[UN[v].sub].name+' đổi sang: '+why;else place(v,s1)}if(why)unplace(u)}
+    let delta=0;
+    if(!why){delta=keysCost(keys)-before;if(!apply){unplace(u);if(v>=0)unplace(v)}}
+    if(why||!apply){if(s1>=0)place(u,s1);if(v>=0)place(v,s2)}
+    return {ok:!why,why,delta,swap:v};
+  }
+  function remove(u){unplace(u)}
+  return {D,P,AM,N,cg,tg,pos,units:UN,allow,mask,place,unplace,ok1,explain,checkMove,remove,load,solve,stats,fullCost};
+}
+</script>
+
+<!-- ================= DỮ LIỆU: mẫu + chuyển sang đầu vào động cơ ================= -->
+<script id="data-src">
+const PALETTE=['#fde68a','#bfdbfe','#c7d2fe','#fbcfe8','#bbf7d0','#fed7aa','#ddd6fe','#a5f3fc','#fecaca','#d9f99d','#e9d5ff','#99f6e4','#fef08a','#e5e7eb','#fcd34d','#93c5fd','#f9a8d4','#86efac','#fdba74','#c4b5fd'];
+const DAYN=['Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6','Thứ 7','CN'];
+let _uid=Date.now()%100000;const uid=p=>(p||'x')+(++_uid).toString(36);
+function emptyState(){return {v:1,school:{name:'Trường THPT ...',year:'2026-2027',hk:'Học kỳ I',apply:'',head:'HIỆU TRƯỞNG'},
+  days:6,am:5,pm:5,subjects:[],teachers:[],classes:[],assigns:[],
+  weights:{cgap:100,lead:30,spread:12,tgap:6,tday:2,two:3,avoid:5},opts:{time:20},tt:{},versions:[]}}
+function parsePeriods(str,st){const P=st.am+st.pm,r=[];String(str||'').split(/[,;\s]+/).forEach(t=>{const m=/^([SCsc])\s*(\d+)$/.exec(t.trim());if(!m)return;const n=+m[2]-1;if(m[1].toUpperCase()==='S'){if(n<st.am)r.push(n)}else if(n<st.pm)r.push(st.am+n)});return r.filter(p=>p>=0&&p<P)}
+function parseFixed(str,main,st){const m=/T\s*(\d)\s*[-.:/ ]\s*(\d+)/i.exec(String(str||''));if(!m)return -1;const d=+m[1]-2,n=+m[2]-1,P=st.am+st.pm;if(d<0||d>=st.days)return -1;const len=main?st.pm:st.am;if(n<0||n>=len)return -1;return d*P+(main?st.am+n:n)}
+function buildInput(st){
+  const P=st.am+st.pm,D=st.days,N=D*P;
+  const cI=new Map(st.classes.map((c,i)=>[c.id,i])),tI=new Map(st.teachers.map((t,i)=>[t.id,i])),sI=new Map(st.subjects.map((s,i)=>[s.id,i]));
+  const units=[],keys=[];
+  for(const a of st.assigns){
+    const c=cI.get(a.c),sub=sI.get(a.sub);const n=+a.n||0;if(c==null||sub==null||n<=0)continue;
+    const t=a.t&&tI.has(a.t)?tI.get(a.t):-1;const cl=st.classes[c],m=cl.main==='C'?1:0;
+    const sess=a.buoi==='phu'?[1-m]:a.buoi==='tuy'?[0,1]:[m];
+    const dbl=Math.max(0,Math.min(+a.dbl||0,Math.floor(n/2)));const sj=st.subjects[sub];
+    for(let i=0;i<n-dbl;i++){
+      const len=i<dbl?2:1,key=a.id+'#'+i,tt=st.tt&&st.tt[key];let fixed=-1,kind='';
+      if(tt&&tt.lock&&tt.s>=0&&tt.s<N){fixed=tt.s;kind='lock'}
+      else if(i===dbl&&sj.fixed){const f=parseFixed(sj.fixed,sess[0],st);if(f>=0){fixed=f;kind='fix'}}
+      units.push({c,t,sub,len,sess,fixed,kind,a:a.id});keys.push(key);
+    }
+  }
+  const inp={D,P,AM:st.am,weights:st.weights,
+    classes:st.classes.map(c=>({name:c.name,main:c.main==='C'?1:0,busy:c.busy||[]})),
+    teachers:st.teachers.map(t=>({name:t.name,maxDay:+t.maxDay||0,maxDays:+t.maxDays||0,busy:t.busy||[]})),
+    subjects:st.subjects.map(s=>({name:s.name,maxDay:+s.maxDay||0,rooms:+s.rooms||0,forbid:parsePeriods(s.forbid,st),avoid:parsePeriods(s.avoid,st)})),units};
+  return {inp,keys};
+}
+function sampleState(){
+  const st=emptyState();st.school.name='Trường THPT Mẫu NDGroup';
+  const SUB=[['Chào cờ','CC',1,0,'','','T2-1'],['Sinh hoạt lớp','SHL',1,0,'','','T7-5'],['Toán','Toán',2],['Ngữ văn','Văn',2],['Tiếng Anh','Anh',2],['Lịch sử','Sử',2],
+    ['HĐTN-HN','HĐTN',1],['GD địa phương','GDĐP',1],['Vật lí','Lý',2],['Hoá học','Hoá',2],['Sinh học','Sinh',2],['Tin học','Tin',2,2],['Địa lí','Địa',2],['GD KT&PL','KTPL',2],
+    ['Công nghệ','CN',2],['GDTC','GDTC',2,4,'','S5,C1'],['GDQP-AN','QP',1,2],['CĐ Toán','CĐT',1],['CĐ Văn','CĐV',1]];
+  const sid={};SUB.forEach((x,i)=>{const id=uid('s');sid[x[1]]=id;st.subjects.push({id,name:x[0],short:x[1],color:PALETTE[i%PALETTE.length],maxDay:x[2],rooms:x[3]||0,forbid:x[4]||'',avoid:x[5]||'',fixed:x[6]||''})});
+  const grades=[[10,'C'],[11,'S'],[12,'S']];
+  grades.forEach(([g,m])=>{for(let i=1;i<=6;i++)st.classes.push({id:uid('c'),name:g+'A'+i,grade:g,main:m,gvcn:'',busy:[]})});
+  const base=[['Toán',3,0],['Văn',3,1],['Anh',3,0],['Sử',2,0],['GDĐP',1,0],['CĐT',1,0],['CĐV',1,0]];
+  const KHTN=['Lý','Hoá','Sinh','Tin'],KHXH=['Địa','KTPL','CN','Tin'];
+  const drafts=[];// {c,sub,n,dbl,buoi}
+  st.classes.forEach((c,ci)=>{const k=(ci%6)<3?KHTN:KHXH;
+    base.forEach(b=>drafts.push({c:c.id,sub:b[0],n:b[1],dbl:b[2],buoi:'chinh'}));
+    k.forEach(s=>drafts.push({c:c.id,sub:s,n:2,dbl:0,buoi:'chinh'}));
+    drafts.push({c:c.id,sub:'GDTC',n:2,dbl:1,buoi:'phu'},{c:c.id,sub:'QP',n:1,dbl:0,buoi:'phu'});
+  });
+  const HO=['Nguyễn','Trần','Lê','Phạm','Hoàng','Vũ','Đặng','Bùi','Đỗ','Ngô','Dương','Lý','Phan','Võ','Trịnh'],DEM=['Thị','Văn','Minh','Thu','Quang','Thanh','Ngọc','Đức','Hải','Bảo','Mai','Hồng'],
+    TEN=['An','Bình','Châu','Dung','Giang','Hà','Hạnh','Hiếu','Hoa','Hùng','Hương','Khánh','Lan','Linh','Long','Mai','Nam','Nga','Phong','Phương','Quân','Sơn','Tâm','Thảo','Trang','Trung','Tú','Tuấn','Vân','Yến','Thắng','Lộc','Nhung','Oanh','Quyên','Hậu','Duy','Kiên','Loan','Nhi','Phúc','Thủy','Vinh','Xuân','Hằng','Đạt','Hoà','Hiền','Cường','Diệp'];
+  const TO={Toán:'Toán - Tin',Tin:'Toán - Tin',Văn:'Ngữ văn',Anh:'Ngoại ngữ',Lý:'KHTN',Hoá:'KHTN',Sinh:'KHTN',CN:'KHTN',Sử:'KHXH',Địa:'KHXH',KTPL:'KHXH',GDTC:'GDTC - QP',QP:'GDTC - QP'};
+  let tn=0;const usedShort={};
+  const newT=(sub)=>{const i=tn++;const name=HO[(i*7)%HO.length]+' '+DEM[(i*5)%DEM.length]+' '+TEN[i%TEN.length];let sh=TEN[i%TEN.length];if(usedShort[sh]){usedShort[sh]++;sh+=usedShort[sh]}else usedShort[sh]=1;
+    const t={id:uid('t'),name,short:sh,group:TO[sub]||'Khác',maxDay:5,maxDays:0,busy:[]};st.teachers.push(t);return t};
+  const assignT={};// sub|class -> teacherId
+  ['Toán','Văn','Anh','Sử','Lý','Hoá','Sinh','Tin','Địa','KTPL','CN','GDTC','QP'].forEach(sub=>{
+    const ds=drafts.filter(d=>d.sub===sub);if(!ds.length)return;
+    const extra=sub==='Toán'?1:sub==='Văn'?1:sub==='Sử'?1:0;
+    const per=ds[0].n+extra,cpt=Math.max(1,Math.floor(14/per)),k=Math.ceil(ds.length/cpt),cpt2=Math.ceil(ds.length/k);
+    let t=null;
+    ds.forEach((d,i)=>{if(i%cpt2===0)t=newT(sub);assignT[sub+'|'+d.c]=t.id});
+  });
+  drafts.forEach(d=>{let key=d.sub;if(d.sub==='CĐT')key='Toán';if(d.sub==='CĐV')key='Văn';if(d.sub==='GDĐP')key='Sử';d.t=assignT[key+'|'+d.c]||''});
+  const isCN=new Set();
+  st.classes.forEach(c=>{for(const s of ['Văn','Toán','Anh','Sử','Lý','Hoá','Sinh','Địa','KTPL','Tin','CN']){const t=assignT[s+'|'+c.id];if(t&&!isCN.has(t)){isCN.add(t);c.gvcn=t;break}}
+    if(!c.gvcn)c.gvcn=assignT['Toán|'+c.id];
+    drafts.push({c:c.id,sub:'CC',n:1,dbl:0,buoi:'chinh',t:c.gvcn},{c:c.id,sub:'SHL',n:1,dbl:0,buoi:'chinh',t:c.gvcn},{c:c.id,sub:'HĐTN',n:1,dbl:0,buoi:'chinh',t:c.gvcn})});
+  drafts.forEach(d=>st.assigns.push({id:uid('a'),c:d.c,sub:sid[d.sub],t:d.t,n:d.n,dbl:d.dbl,buoi:d.buoi}));
+  const P=st.am+st.pm;
+  [2,9,16,23].forEach((ti,k)=>{const t=st.teachers[ti];if(!t)return;const d=(k*2+1)%st.days;for(let p=0;p<st.am;p++)t.busy.push(d*P+p)});
+  return st;
+}
+</script>
+
+<!-- ================= GIAO DIỆN ================= -->
+<script>
+const LS='ndg-tkb-thpt-v1';
+let state=load()||emptyState();
+let step=+(localStorage.getItem(LS+'-step')||0);
+let E=null,KEYS=[],dirtyE=true;
+let view={mode:'class',id:'',sel:-1};
+let worker=null,lastStats=null;
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function load(){try{const s=JSON.parse(localStorage.getItem(LS));if(s&&s.v)return Object.assign(emptyState(),s)}catch(e){}return null}
+function save(){try{localStorage.setItem(LS,JSON.stringify(state))}catch(e){toast('Không lưu được vào trình duyệt — hãy dùng "Lưu file dữ liệu"')}dirtyE=true}
+function toast(m,ms){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',ms||2600)}
+const P=()=>state.am+state.pm,NS=()=>state.days*P();
+const byId=(k,id)=>state[k].find(x=>x.id===id);
+const subj=id=>byId('subjects',id),teach=id=>byId('teachers',id),cls=id=>byId('classes',id);
+function slotName(s){const p=s%P(),d=(s/P())|0;return DAYN[d]+' · '+(p<state.am?'Sáng '+(p+1):'Chiều '+(p-state.am+1))}
+function engine(){if(dirtyE||!E){const b=buildInput(state);E=createEngine(b.inp);KEYS=b.keys;E.load(KEYS.map(k=>state.tt[k]?state.tt[k].s:-1));dirtyE=false}return E}
+function syncTT(){const old=state.tt,tt={};KEYS.forEach((k,u)=>{if(E.pos[u]>=0)tt[k]={s:E.pos[u],lock:!!(old[k]&&old[k].lock)}});state.tt=tt;try{localStorage.setItem(LS,JSON.stringify(state))}catch(e){}}
+
+const STEPS=['Khai báo trường & môn','Giáo viên & lớp','Phân công giảng dạy','Xếp & chỉnh TKB','Xuất Excel / In'];
+function render(){
+  $('#steps').innerHTML=STEPS.map((s,i)=>`<button class="${i===step?'on':''}" data-act="step" data-i="${i}"><i>${i+1}</i>${s}</button>`).join('');
+  $('#hdSchool').textContent=(state.school.name||'')+' · Năm học '+(state.school.year||'')+' · '+(state.school.hk||'');
+  [r1,r2,r3,r4,r5][step]();
+}
+const GUIDE=[
+ '<b>Bước 1.</b> Nhập tên trường, số ngày học, số tiết mỗi buổi. Khai báo môn học và ràng buộc của từng môn (tối đa tiết/ngày, số phòng/sân dùng chung, tiết không được xếp, tiết cố định như Chào cờ T2-1, SHL T7-5). Chưa có dữ liệu? Bấm <b>Nạp dữ liệu mẫu</b> để xem một trường 18 lớp chạy thử.',
+ '<b>Bước 2.</b> Khai báo giáo viên (tổ chuyên môn, tối đa tiết/ngày, tối đa số ngày dạy/tuần, tiết bận/nghỉ) và các lớp (khối, buổi học chính Sáng/Chiều, GVCN, lịch nghỉ của lớp).',
+ '<b>Bước 3.</b> Phân công chuyên môn: bấm vào ô Lớp × Môn để chọn GV, số tiết/tuần, số cặp tiết đôi, học buổi chính hay buổi phụ (ví dụ GDTC, GDQP học buổi ngược). Có thể dán bảng phân công từ Excel.',
+ '<b>Bước 4.</b> Bấm <b>Kiểm tra dữ liệu</b> rồi <b>Xếp tự động</b>. Sau khi xếp: bấm một tiết để chọn — ô <span class="pill ok">viền xanh</span> đổi được và tốt hơn/không đổi, <span class="pill warn">viền cam</span> đổi được nhưng kém hơn, ô mờ là không đổi được (rê chuột xem lý do). Bấm ô đích để đổi. Khoá tiết đã ưng ý rồi <b>Tối ưu tiếp</b>.',
+ '<b>Bước 5.</b> Xuất Excel theo lớp, theo giáo viên, toàn trường, theo tổ; hoặc in/lưu PDF. Nhớ <b>Lưu file dữ liệu</b> (.json) để mở lại trên máy khác.'];
+const guide=i=>`<div class="guide">${GUIDE[i]}</div>`;
+
+/* ---------- Bước 1 ---------- */
+function inp(k,id,f,v,type,extra){return `<input ${type?'type="'+type+'"':''} data-k="${k}" data-id="${id}" data-f="${f}" value="${esc(v)}" ${extra||''}>`}
+function r1(){
+  const s=state.school,w=state.weights;
+  $('#app').innerHTML=guide(0)+`<div class="grid2">
+  <div class="card"><h3>Thông tin trường</h3><div class="form">
+    <label class="f">Tên trường<input data-g="school.name" value="${esc(s.name)}"></label>
+    <label class="f">Năm học<input data-g="school.year" value="${esc(s.year)}"></label>
+    <label class="f">Học kỳ<input data-g="school.hk" value="${esc(s.hk)}"></label>
+    <label class="f">Áp dụng từ ngày<input data-g="school.apply" value="${esc(s.apply)}" placeholder="dd/mm/yyyy"></label>
+    <label class="f">Người ký<input data-g="school.head" value="${esc(s.head)}"></label>
+  </div></div>
+  <div class="card"><h3>Ngày học & tiết học</h3><div class="form">
+    <label class="f">Số ngày học/tuần<select data-g="days" data-num="1" data-rr="1">${[5,6].map(n=>`<option ${state.days==n?'selected':''} value="${n}">${n} ngày (Thứ 2 → ${DAYN[n-1]})</option>`).join('')}</select></label>
+    <label class="f">Số tiết buổi sáng<input type="number" min="0" max="6" data-g="am" data-num="1" data-rr="1" value="${state.am}"></label>
+    <label class="f">Số tiết buổi chiều<input type="number" min="0" max="6" data-g="pm" data-num="1" data-rr="1" value="${state.pm}"></label>
+    <label class="f">Thời gian xếp tự động (giây)<input type="number" min="5" max="600" data-g="opts.time" data-num="1" value="${state.opts.time}"></label>
+  </div><p class="hint">Đổi số ngày/số tiết sẽ làm lệch TKB đã xếp — nên xếp lại sau khi đổi.</p></div>
+  </div>
+  <div class="card"><h3>Ràng buộc mềm (càng lớn càng ưu tiên tránh)</h3><div class="form">
+    ${[['cgap','Lớp có tiết trống giữa buổi'],['lead','Lớp không học từ tiết đầu buổi'],['spread','Một môn học rải 2 lần/ngày (không phải tiết đôi)'],['tgap','GV có tiết lủng (trống giữa buổi)'],['tday','Mỗi ngày GV phải lên trường'],['two','GV phải dạy cả sáng và chiều cùng ngày'],['avoid','Môn rơi vào tiết "hạn chế"']]
+      .map(([k,l])=>`<label class="f">${l}<input type="number" min="0" data-g="weights.${k}" data-num="1" value="${w[k]}"></label>`).join('')}
+  </div><p class="hint">Ràng buộc cứng luôn được đảm bảo: không trùng giờ GV/lớp, GV bận, lớp nghỉ, buổi học, tiết đôi liền nhau, tối đa tiết/ngày của môn và của GV, số ngày dạy tối đa, số phòng/sân, tiết cố định.</p></div>
+  <div class="card"><h3>Môn học <span class="pill">${state.subjects.length}</span><span class="sp"></span><button class="btn sm" data-act="addSub">+ Thêm môn</button></h3>
+  <p class="hint">“Không xếp tiết” / “Hạn chế tiết”: ghi S1..S5 (sáng), C1..C5 (chiều), cách nhau dấu phẩy. “Cố định”: T2-1 = Thứ 2 tiết 1 của buổi chính của lớp. “Số phòng/sân”: số lớp học môn này cùng lúc tối đa (0 = không giới hạn).</p>
+  <div class="tw"><table class="t"><tr><th>Tên môn</th><th>Viết tắt</th><th>Màu</th><th>Tối đa tiết/ngày</th><th>Số phòng/sân</th><th>Không xếp tiết</th><th>Hạn chế tiết</th><th>Cố định</th><th>Tổng tiết/tuần</th><th></th></tr>
+  ${state.subjects.map(x=>`<tr><td>${inp('subjects',x.id,'name',x.name)}</td><td>${inp('subjects',x.id,'short',x.short,'','style="width:80px"')}</td><td>${inp('subjects',x.id,'color',x.color,'color')}</td>
+   <td>${inp('subjects',x.id,'maxDay',x.maxDay,'number','min="0"')}</td><td>${inp('subjects',x.id,'rooms',x.rooms,'number','min="0"')}</td><td>${inp('subjects',x.id,'forbid',x.forbid,'','placeholder="S5,C1"')}</td><td>${inp('subjects',x.id,'avoid',x.avoid)}</td><td>${inp('subjects',x.id,'fixed',x.fixed,'','placeholder="T2-1" style="width:80px"')}</td>
+   <td>${state.assigns.filter(a=>a.sub===x.id).reduce((a,b)=>a+(+b.n||0),0)}</td><td><button class="btn sm del" data-act="del" data-k="subjects" data-id="${x.id}">Xoá</button></td></tr>`).join('')}
+  </table></div></div>`;
+}
+/* ---------- Bước 2 ---------- */
+function loadOf(tid){return state.assigns.filter(a=>a.t===tid).reduce((s,a)=>s+(+a.n||0),0)}
+function r2(){
+  const groups=[...new Set(state.teachers.map(t=>t.group).filter(Boolean))];
+  $('#app').innerHTML=guide(1)+`
+  <div class="card"><h3>Giáo viên <span class="pill">${state.teachers.length}</span><span class="sp"></span><button class="btn sm" data-act="addT">+ Thêm GV</button></h3>
+  <datalist id="dlGroups">${groups.map(g=>`<option value="${esc(g)}">`).join('')}</datalist>
+  <div class="tw"><table class="t"><tr><th>Họ tên</th><th>Tên ngắn (in TKB)</th><th>Tổ chuyên môn</th><th>Tối đa tiết/ngày</th><th>Tối đa ngày dạy/tuần</th><th>Tiết bận</th><th>Tổng tiết/tuần</th><th></th></tr>
+  ${state.teachers.map(t=>{const l=loadOf(t.id);return `<tr><td>${inp('teachers',t.id,'name',t.name)}</td><td>${inp('teachers',t.id,'short',t.short,'','style="width:110px"')}</td><td>${inp('teachers',t.id,'group',t.group,'','list="dlGroups"')}</td>
+   <td>${inp('teachers',t.id,'maxDay',t.maxDay,'number','min="0"')}</td><td>${inp('teachers',t.id,'maxDays',t.maxDays,'number','min="0" max="7"')}</td>
+   <td><button class="btn sm" data-act="busy" data-k="teachers" data-id="${t.id}">${(t.busy||[]).length?'🔴 '+t.busy.length+' tiết':'Đặt lịch bận'}</button></td>
+   <td><span class="pill ${l>19?'bad':l>17?'warn':'ok'}">${l}</span></td><td><button class="btn sm del" data-act="del" data-k="teachers" data-id="${t.id}">Xoá</button></td></tr>`}).join('')}
+  </table></div><p class="hint">Tối đa ngày dạy/tuần = 0 là không giới hạn. Tổng tiết > 17 tô cam, > 19 tô đỏ.</p></div>
+  <div class="card"><h3>Lớp học <span class="pill">${state.classes.length}</span><span class="sp"></span><button class="btn sm" data-act="addC">+ Thêm lớp</button></h3>
+  <div class="tw"><table class="t"><tr><th>Tên lớp</th><th>Khối</th><th>Buổi chính</th><th>GVCN</th><th>Lịch nghỉ của lớp</th><th>Tiết buổi chính / sức chứa</th><th>Tiết buổi phụ</th><th></th></tr>
+  ${state.classes.map(c=>{const cap=state.days*(c.main==='C'?state.pm:state.am);const ch=state.assigns.filter(a=>a.c===c.id&&(a.buoi||'chinh')==='chinh').reduce((s,a)=>s+(+a.n||0),0),ph=state.assigns.filter(a=>a.c===c.id&&a.buoi&&a.buoi!=='chinh').reduce((s,a)=>s+(+a.n||0),0);
+   return `<tr><td>${inp('classes',c.id,'name',c.name,'','style="width:90px"')}</td><td>${inp('classes',c.id,'grade',c.grade,'number','min="1" max="12"')}</td>
+   <td><select data-k="classes" data-id="${c.id}" data-f="main"><option value="S" ${c.main!=='C'?'selected':''}>Sáng</option><option value="C" ${c.main==='C'?'selected':''}>Chiều</option></select></td>
+   <td><select data-k="classes" data-id="${c.id}" data-f="gvcn"><option value="">—</option>${state.teachers.map(t=>`<option value="${t.id}" ${c.gvcn===t.id?'selected':''}>${esc(t.name)}</option>`).join('')}</select></td>
+   <td><button class="btn sm" data-act="busy" data-k="classes" data-id="${c.id}">${(c.busy||[]).length?'🔴 '+c.busy.length+' tiết':'Đặt lịch nghỉ'}</button></td>
+   <td><span class="pill ${ch>cap?'bad':'ok'}">${ch} / ${cap}</span></td><td>${ph}</td><td><button class="btn sm del" data-act="del" data-k="classes" data-id="${c.id}">Xoá</button></td></tr>`}).join('')}
+  </table></div></div>`;
+}
+/* ---------- Bước 3 ---------- */
+function r3(){
+  const subs=state.subjects,cs=[...state.classes].sort((a,b)=>(a.grade-b.grade)||a.name.localeCompare(b.name,'vi',{numeric:true}));
+  const A={};state.assigns.forEach(a=>A[a.c+'|'+a.sub]=a);
+  const tot={};
+  $('#app').innerHTML=guide(2)+`
+  <div class="card"><h3>Bảng phân công (Lớp × Môn)<span class="sp"></span><button class="btn sm" data-act="gvcnHD">Gán GVCN dạy CC/SHL/HĐTN</button></h3>
+  <p class="hint">Mỗi ô: <b>số tiết</b> · GV. Ký hiệu: <b>Đ</b> = có tiết đôi, <b>P</b> = học buổi phụ, <b>±</b> = buổi nào cũng được. Bấm ô để sửa.</p>
+  <div class="tw" style="max-height:70vh"><table class="t pc"><tr><th style="text-align:left">Lớp</th>${subs.map(s=>`<th><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${s.color}"></span> ${esc(s.short||s.name)}</th>`).join('')}<th>Tổng</th></tr>
+  ${cs.map(c=>{let sum=0;return `<tr><td><b>${esc(c.name)}</b> <span class="pill">${c.main==='C'?'Chiều':'Sáng'}</span></td>${subs.map(s=>{const a=A[c.id+'|'+s.id];if(a){sum+=+a.n||0;tot[s.id]=(tot[s.id]||0)+(+a.n||0)}
+    const t=a&&teach(a.t);return `<td class="c" data-act="pc" data-c="${c.id}" data-s="${s.id}">${a?`<span class="n">${a.n}</span>${a.dbl>0?' Đ':''}${a.buoi==='phu'?' P':a.buoi==='tuy'?' ±':''}<span class="g">${t?esc(t.short||t.name):'<span style="color:var(--bad)">chưa có GV</span>'}</span>`:'<span style="color:#d4d4d4">+</span>'}</td>`}).join('')}<td><b>${sum}</b></td></tr>`}).join('')}
+  <tr><td><b>Tổng</b></td>${subs.map(s=>`<td style="text-align:center"><b>${tot[s.id]||0}</b></td>`).join('')}<td></td></tr>
+  </table></div></div>
+  <div class="card"><h3>Dán phân công từ Excel</h3>
+  <p class="hint">Mỗi dòng: <b>Lớp | Môn | Giáo viên | Số tiết | Số cặp tiết đôi | Buổi (chinh/phu/tuy)</b> — copy các cột từ Excel rồi dán. Lớp/môn/GV chưa có sẽ được tạo mới (tên lớp bắt đầu bằng số khối, ví dụ 10A1).</p>
+  <textarea id="paste" rows="6" style="width:100%" placeholder="10A1	Toán	Nguyễn Văn An	3	0	chinh"></textarea>
+  <div class="row" style="margin-top:8px"><button class="btn pri" data-act="importPaste">Nhập phân công</button><label class="row"><input type="checkbox" id="pasteReplace"> Xoá phân công cũ trước khi nhập</label></div></div>`;
+}
+function openPC(cid,sid){
+  const c=cls(cid),s=subj(sid);let a=state.assigns.find(x=>x.c===cid&&x.sub===sid);
+  const ts=[...state.teachers].sort((x,y)=>{const ex=state.assigns.some(z=>z.t===x.id&&z.sub===sid)?0:1,ey=state.assigns.some(z=>z.t===y.id&&z.sub===sid)?0:1;return ex-ey||x.name.localeCompare(y.name,'vi')});
+  modal(`<h3>Phân công: ${esc(s.name)} — Lớp ${esc(c.name)}</h3><div class="form">
+   <label class="f">Giáo viên<select id="mT"><option value="">— chưa phân công GV —</option>${ts.map(t=>`<option value="${t.id}" ${a&&a.t===t.id?'selected':''}>${esc(t.name)} (${esc(t.group||'')}) · ${loadOf(t.id)} tiết</option>`).join('')}</select></label>
+   <label class="f">Số tiết/tuần<input id="mN" type="number" min="0" max="15" value="${a?a.n:2}"></label>
+   <label class="f">Số cặp tiết đôi<input id="mD" type="number" min="0" max="7" value="${a?a.dbl:0}"></label>
+   <label class="f">Buổi học<select id="mB"><option value="chinh">Buổi chính (${c.main==='C'?'chiều':'sáng'})</option><option value="phu" ${a&&a.buoi==='phu'?'selected':''}>Buổi phụ (${c.main==='C'?'sáng':'chiều'})</option><option value="tuy" ${a&&a.buoi==='tuy'?'selected':''}>Buổi nào cũng được</option></select></label></div>
+   <div class="row" style="margin-top:14px"><button class="btn pri" id="mSave">Lưu</button><button class="btn" id="mGrade">Lưu & áp số tiết/tiết đôi/buổi cho cả khối ${c.grade}</button>${a?'<button class="btn del" id="mDel">Xoá phân công</button>':''}<span class="sp" style="flex:1"></span><button class="btn" data-act="close">Đóng</button></div>`);
+  const put=(cc)=>{let x=state.assigns.find(z=>z.c===cc&&z.sub===sid);if(!x){x={id:uid('a'),c:cc,sub:sid,t:'',n:0,dbl:0,buoi:'chinh'};state.assigns.push(x)}x.n=+$('#mN').value||0;x.dbl=+$('#mD').value||0;x.buoi=$('#mB').value;return x};
+  $('#mSave').onclick=()=>{const x=put(cid);x.t=$('#mT').value;if(!x.n)state.assigns=state.assigns.filter(z=>z!==x);save();closeModal();render()};
+  $('#mGrade').onclick=()=>{const x=put(cid);x.t=$('#mT').value;state.classes.filter(z=>z.grade==c.grade&&z.id!==cid).forEach(z=>put(z.id));state.assigns=state.assigns.filter(z=>z.n>0);save();closeModal();render();toast('Đã áp cho cả khối '+c.grade+' (GV các lớp khác giữ nguyên)')};
+  if(a)$('#mDel').onclick=()=>{state.assigns=state.assigns.filter(z=>z!==a);save();closeModal();render()};
+}
+function importPaste(){
+  const txt=$('#paste').value.trim();if(!txt)return toast('Chưa dán dữ liệu');
+  if($('#pasteReplace').checked){state.assigns=[];state.tt={}}
+  const norm=s=>String(s||'').trim().toLowerCase();let n=0,bad=0;
+  txt.split(/\r?\n/).forEach(line=>{const f=line.split(/\t|\|/).map(x=>x.trim());if(f.length<4||!f[0]||!f[1]){bad++;return}
+    let c=state.classes.find(x=>norm(x.name)===norm(f[0]));if(!c){const g=parseInt(f[0])||10;c={id:uid('c'),name:f[0],grade:g,main:'S',gvcn:'',busy:[]};state.classes.push(c)}
+    let s=state.subjects.find(x=>norm(x.name)===norm(f[1])||norm(x.short)===norm(f[1]));if(!s){s={id:uid('s'),name:f[1],short:f[1],color:PALETTE[state.subjects.length%PALETTE.length],maxDay:2,rooms:0,forbid:'',avoid:'',fixed:''};state.subjects.push(s)}
+    let t=null;if(f[2]){t=state.teachers.find(x=>norm(x.name)===norm(f[2])||norm(x.short)===norm(f[2]));if(!t){t={id:uid('t'),name:f[2],short:f[2].split(' ').pop(),group:'',maxDay:5,maxDays:0,busy:[]};state.teachers.push(t)}}
+    const b=norm(f[5]);const buoi=b.startsWith('p')?'phu':b.startsWith('t')?'tuy':'chinh';
+    let a=state.assigns.find(x=>x.c===c.id&&x.sub===s.id);if(!a){a={id:uid('a'),c:c.id,sub:s.id};state.assigns.push(a)}
+    Object.assign(a,{t:t?t.id:'',n:parseInt(f[3])||0,dbl:parseInt(f[4])||0,buoi});n++});
+  state.assigns=state.assigns.filter(a=>a.n>0);save();render();toast('Đã nhập '+n+' dòng'+(bad?' · bỏ qua '+bad+' dòng sai':''));
+}
+/* ---------- Lịch bận ---------- */
+function openBusy(k,id){
+  const it=byId(k,id);const set=new Set(it.busy||[]);const Pn=P();
+  const draw=()=>{let h=`<table class="busy"><tr><th></th>${Array.from({length:state.days},(_,d)=>`<th data-d="${d}">${DAYN[d]}</th>`).join('')}</tr>`;
+    for(let p=0;p<Pn;p++){if(p===state.am&&state.am)h+='<tr><td colspan="9" style="height:4px"></td></tr>';
+      h+=`<tr><th data-p="${p}">${p<state.am?'S'+(p+1):'C'+(p-state.am+1)}</th>${Array.from({length:state.days},(_,d)=>{const s=d*Pn+p;return `<td class="b ${set.has(s)?'on':''}" data-s="${s}">${set.has(s)?'Bận':''}</td>`}).join('')}</tr>`}
+    $('#busyG').innerHTML=h+'</table>'};
+  modal(`<h3>${k==='teachers'?'Lịch bận GV':'Lịch nghỉ lớp'}: ${esc(it.name)}</h3><p class="hint">Bấm ô để bật/tắt. Bấm tên thứ để chọn cả ngày, bấm tên tiết để chọn cả hàng.</p>
+   <div class="row" style="margin-bottom:8px">${Array.from({length:state.days},(_,d)=>`<button class="btn sm" data-bs="${d}" data-ss="0">Nghỉ sáng ${DAYN[d]}</button>`).join('')}</div>
+   <div class="row" style="margin-bottom:8px">${Array.from({length:state.days},(_,d)=>`<button class="btn sm" data-bs="${d}" data-ss="1">Nghỉ chiều ${DAYN[d]}</button>`).join('')}</div>
+   <div class="tw" style="border:0" id="busyG"></div><div class="row" style="margin-top:12px"><button class="btn pri" id="bSave">Lưu</button><button class="btn" id="bClr">Xoá hết</button><button class="btn" data-act="close">Đóng</button></div>`);
+  draw();
+  const tog=list=>{const all=list.every(s=>set.has(s));list.forEach(s=>all?set.delete(s):set.add(s));draw()};
+  $('#modal').onclick=e=>{const t=e.target;
+    if(t.dataset.s!=null&&t.classList.contains('b'))tog([+t.dataset.s]);
+    else if(t.dataset.d!=null)tog(Array.from({length:Pn},(_,p)=>+t.dataset.d*Pn+p));
+    else if(t.dataset.p!=null)tog(Array.from({length:state.days},(_,d)=>d*Pn+(+t.dataset.p)));
+    else if(t.dataset.bs!=null){const d=+t.dataset.bs,ss=+t.dataset.ss;const r=ss?[state.am,Pn]:[0,state.am];tog(Array.from({length:r[1]-r[0]},(_,i)=>d*Pn+r[0]+i))}};
+  $('#bSave').onclick=()=>{it.busy=[...set].sort((a,b)=>a-b);save();closeModal();render()};
+  $('#bClr').onclick=()=>{set.clear();draw()};
+}
+/* ---------- Bước 4: xếp & chỉnh ---------- */
+function checkData(){
+  const iss=[],Pn=P();
+  if(!state.classes.length)iss.push(['bad','Chưa có lớp']);
+  if(!state.assigns.length)iss.push(['bad','Chưa có phân công']);
+  state.classes.forEach(c=>{const m=c.main==='C'?1:0;const sl=(ss)=>{let n=0;for(let d=0;d<state.days;d++){const r=ss?[state.am,Pn]:[0,state.am];for(let p=r[0];p<r[1];p++)if(!(c.busy||[]).includes(d*Pn+p))n++}return n};
+    const as=state.assigns.filter(a=>a.c===c.id);const sum=b=>as.filter(a=>(a.buoi||'chinh')===b).reduce((s,a)=>s+(+a.n||0),0);
+    if(sum('chinh')>sl(m))iss.push(['bad',`Lớp ${c.name}: ${sum('chinh')} tiết buổi chính > ${sl(m)} ô trống`]);
+    if(sum('phu')>sl(1-m))iss.push(['bad',`Lớp ${c.name}: ${sum('phu')} tiết buổi phụ > ${sl(1-m)} ô trống`]);
+    as.forEach(a=>{const s=subj(a.sub);if(!a.t)iss.push(['warn',`Lớp ${c.name} – ${s?s.name:'?'}: chưa có GV`]);if(a.dbl*2>a.n)iss.push(['warn',`Lớp ${c.name} – ${s?s.name:'?'}: số cặp tiết đôi lớn hơn số tiết`]);
+      if(s&&s.maxDay&&a.dbl>0&&s.maxDay<2)iss.push(['bad',`Môn ${s.name} có tiết đôi nhưng tối đa ${s.maxDay} tiết/ngày`]);
+      if(s&&s.maxDay&&Math.ceil(a.n/s.maxDay)>state.days)iss.push(['bad',`Lớp ${c.name} – ${s.name}: ${a.n} tiết không đủ ngày với tối đa ${s.maxDay} tiết/ngày`])})});
+  state.teachers.forEach(t=>{const l=loadOf(t.id);const free=NS()-(t.busy||[]).length;if(l>free)iss.push(['bad',`GV ${t.name}: ${l} tiết > ${free} ô rảnh`]);
+    if(t.maxDay&&l>t.maxDay*(t.maxDays||state.days))iss.push(['bad',`GV ${t.name}: ${l} tiết vượt giới hạn ${t.maxDay} tiết/ngày × ${t.maxDays||state.days} ngày`])});
+  state.subjects.forEach(s=>{if(s.fixed&&parseFixed(s.fixed,0,state)<0)iss.push(['bad',`Môn ${s.name}: tiết cố định "${s.fixed}" không đọc được (dạng T2-1)`])});
+  return iss;
+}
+function r4(){
+  const e=engine();const st=e.stats();lastStats=st;
+  if(!view.id||(view.mode==='class'&&!cls(view.id))||(view.mode==='teacher'&&!teach(view.id)))view.id=view.mode==='teacher'?(state.teachers[0]||{}).id:(state.classes[0]||{}).id;
+  const opts=(view.mode==='teacher'?state.teachers:state.classes).map(x=>`<option value="${x.id}" ${x.id===view.id?'selected':''}>${esc(x.name)}</option>`).join('');
+  $('#app').innerHTML=guide(3)+`
+  <div class="card"><h3>Xếp thời khoá biểu tự động</h3>
+   <div class="row"><button class="btn" data-act="check">Kiểm tra dữ liệu</button><button class="btn pri" data-act="solve" data-m="new">Xếp tự động (giữ tiết khoá)</button><button class="btn" data-act="solve" data-m="continue">Tối ưu tiếp từ TKB hiện tại</button>
+   <button class="btn" data-act="unlockAll">Mở khoá tất cả</button><button class="btn del" data-act="clearTT">Xoá TKB</button>
+   <label class="row" style="color:var(--muted)">Thời gian <input type="number" min="5" max="600" data-g="opts.time" data-num="1" value="${state.opts.time}"> giây</label></div>
+   <div id="runBox" style="display:none;margin-top:10px"><div class="row"><span id="runTxt">Đang chuẩn bị…</span><span style="flex:1"></span><button class="btn sm" data-act="stop">Dừng</button></div><div class="prog" style="margin-top:6px"><div id="runBar"></div></div></div>
+   <div id="issues"></div>
+   <div class="stats" style="margin-top:12px">
+    <div class="stat"><b>${st.done}/${st.lessons}</b><span>Tiết đã xếp</span></div>
+    <div class="stat"><b style="color:${st.unplaced.length?'var(--bad)':'var(--ok)'}">${st.unplaced.length}</b><span>Tiết chưa xếp được</span></div>
+    <div class="stat"><b style="color:${st.classGaps?'var(--warn)':'var(--ok)'}">${st.classGaps}</b><span>Tiết trống giữa buổi (lớp)</span></div>
+    <div class="stat"><b>${st.teacherGaps}</b><span>Tiết lủng của GV</span></div>
+    <div class="stat"><b>${st.cost}</b><span>Điểm phạt (càng thấp càng tốt)</span></div>
+   </div></div>
+  <div class="layout4"><div class="card">
+   <h3><select id="vMode">${[['class','Theo lớp'],['teacher','Theo giáo viên'],['allC','Toàn trường – theo lớp'],['allT','Toàn trường – theo GV']].map(([v,l])=>`<option value="${v}" ${view.mode===v?'selected':''}>${l}</option>`).join('')}</select>
+   ${view.mode==='class'||view.mode==='teacher'?`<select id="vId">${opts}</select><button class="btn sm" data-act="prevE">◀</button><button class="btn sm" data-act="nextE">▶</button>`:''}
+   <span class="sp"></span>${view.sel>=0?`<span class="pill">Đang chọn: ${esc(unitLabel(view.sel))}</span><button class="btn sm" data-act="lock">${isLocked(view.sel)?'Mở khoá':'Khoá tiết'}</button><button class="btn sm" data-act="unplace">Bỏ khỏi TKB</button><button class="btn sm" data-act="desel">Bỏ chọn</button>`:''}</h3>
+   <div id="grid"></div>
+   ${view.mode==='class'||view.mode==='teacher'?'<div class="legend"><span class="a">Đổi được, tốt hơn/không đổi</span><span class="b">Đổi được, kém hơn</span><span class="c">Không đổi được (rê chuột xem lý do)</span><span>🔒 tiết khoá · 📌 tiết cố định</span></div>':''}
+  </div>
+  <div><div class="card"><h3>Tiết chưa xếp <span class="pill ${st.unplaced.length?'bad':'ok'}">${st.unplaced.length}</span></h3>
+   ${st.unplaced.length?`<p class="hint">Bấm một tiết rồi bấm ô trống (viền xanh) trên lưới để đặt tay.</p><div class="list">${st.unplaced.map(u=>`<div data-act="pickU" data-u="${u}" class="${view.sel===u?'on':''}">${esc(unitLabel(u))}</div>`).join('')}</div>`:'<p class="hint">Tất cả tiết đã được xếp.</p>'}</div>
+   <div class="card"><h3>Phương án TKB<span class="sp"></span><button class="btn sm" data-act="saveVer">Lưu phương án</button></h3>
+   ${state.versions.length?`<div class="list">${state.versions.map((v,i)=>`<div style="cursor:default">${esc(v.name)}<br><small style="color:var(--muted)">${esc(v.at)}</small><div class="row" style="margin-top:4px"><button class="btn sm" data-act="restoreVer" data-i="${i}">Khôi phục</button><button class="btn sm del" data-act="delVer" data-i="${i}">Xoá</button></div></div>`).join('')}</div>`:'<p class="hint">Lưu lại các phương án để so sánh và khôi phục.</p>'}</div></div></div>`;
+  $('#vMode').onchange=e=>{view.mode=e.target.value;view.id='';render()};
+  if($('#vId'))$('#vId').onchange=e=>{view.id=e.target.value;render()};
+  drawGrid();
+}
+function unitLabel(u){const x=E.units[u];const c=state.classes[x.c],s=state.subjects[x.sub],t=x.t>=0?state.teachers[x.t]:null;return `${c.name} · ${s.name}${x.len===2?' (đôi)':''} · ${t?t.short||t.name:'—'}`}
+function isLocked(u){const k=KEYS[u];return !!(state.tt[k]&&state.tt[k].lock)}
+function cellHTML(u,mode,second){
+  const x=E.units[u],s=state.subjects[x.sub],t=x.t>=0?state.teachers[x.t]:null,c=state.classes[x.c];
+  const lk=x.kind==='fix'?'📌':isLocked(u)?'🔒':'';
+  const top=mode==='teacher'?c.name:(s.short||s.name),bot=mode==='teacher'?(s.short||s.name):(t?t.short||t.name:'');
+  return `${lk?`<span class="lk">${lk}</span>`:''}<b>${esc(top)}</b><small>${esc(bot)}${x.len===2?(second?' ▲':' ▼'):''}</small>`;
+}
+function drawGrid(){
+  const g=$('#grid'),Pn=P(),N=NS(),e=E;
+  if(view.mode==='allC'||view.mode==='allT'){
+    const ents=view.mode==='allC'?state.classes:state.teachers,arr=view.mode==='allC'?e.cg:e.tg;
+    let h=`<div class="tw" style="max-height:72vh"><table class="big"><tr><th>Thứ</th><th>Tiết</th>${ents.map(x=>`<th>${esc(view.mode==='allC'?x.name:(x.short||x.name))}</th>`).join('')}</tr>`;
+    for(let d=0;d<state.days;d++)for(let p=0;p<Pn;p++){const s=d*Pn+p;
+      h+=`<tr>${p===0?`<th class="d" rowspan="${Pn}">${DAYN[d]}</th>`:''}<th>${p<state.am?'S'+(p+1):'C'+(p-state.am+1)}</th>${ents.map((x,i)=>{const u=arr[i*N+s];if(u<0)return '<td></td>';const un=e.units[u],sb=state.subjects[un.sub];
+        const txt=view.mode==='allC'?(sb.short||sb.name)+(un.t>=0?'-'+(state.teachers[un.t].short||''):''):state.classes[un.c].name+'-'+(sb.short||'');
+        return `<td class="x" style="background:${sb.color}" data-act="jump" data-u="${u}" title="${esc(unitLabel(u))}">${esc(txt)}</td>`}).join('')}</tr>`}
+    g.innerHTML=h+'</table></div>';return;
+  }
+  const isT=view.mode==='teacher';const idx=(isT?state.teachers:state.classes).findIndex(x=>x.id===view.id);
+  if(idx<0){g.innerHTML='<p class="hint">Chưa có dữ liệu. Hãy khai báo ở các bước trước hoặc nạp dữ liệu mẫu.</p>';return}
+  const arr=isT?e.tg:e.cg;
+  const sel=view.sel;const st={};
+  if(sel>=0)for(let s=0;s<N;s++){
+    const showSlot=isT?true:e.units[sel].c===idx;if(!showSlot)break;
+    const r=e.checkMove(sel,s,false);if(r.self){st[s]=['sel','']}else if(r.ok)st[s]=[r.delta<=0?'tok':'twarn',(r.delta<=0?'Đổi được':'Đổi được nhưng kém hơn')+' ('+(r.delta>0?'+':'')+Math.round(r.delta)+' điểm)'];else st[s]=['tbad',r.why]}
+  let h=`<table class="tkb"><tr><th style="width:62px"></th>${Array.from({length:state.days},(_,d)=>`<th>${DAYN[d]}</th>`).join('')}</tr>`;
+  for(let p=0;p<Pn;p++){
+    if(p===state.am&&state.am)h+='<tr class="sep"><td></td></tr>';
+    h+=`<tr><td class="lb">${p<state.am?'Sáng '+(p+1):'Chiều '+(p-state.am+1)}</td>`;
+    for(let d=0;d<state.days;d++){const s=d*Pn+p,u=arr[idx*N+s];
+      const cl=st[s]?st[s][0]:'',ti=st[s]?st[s][1]:'';
+      if(u>=0){const x=e.units[u],sb=state.subjects[x.sub];const second=e.pos[u]!==s;
+        h+=`<td class="s ${u===sel?'sel':cl}" style="background:${sb.color}" data-act="cell" data-s="${s}" data-u="${u}" title="${esc(ti||unitLabel(u))}">${cellHTML(u,view.mode,second)}</td>`}
+      else{let busy='';if(isT&&(state.teachers[idx].busy||[]).includes(s))busy='<small style="color:var(--bad)">GV bận</small>';if(!isT&&(state.classes[idx].busy||[]).includes(s))busy='<small style="color:var(--bad)">Lớp nghỉ</small>';
+        h+=`<td class="s ${cl}" data-act="cell" data-s="${s}" data-u="-1" title="${esc(ti)}">${busy}</td>`}}
+    h+='</tr>';
+  }
+  g.innerHTML=h+'</table>';
+}
+function cellClick(s,u){
+  const e=E;
+  if(view.sel<0){if(u>=0){view.sel=u;render()}return}
+  if(u===view.sel){view.sel=-1;render();return}
+  const sel=view.sel,x=e.units[sel];
+  if(x.fixed>=0){toast('Tiết đang khoá/cố định — mở khoá trước khi đổi');view.sel=u;render();return}
+  const r=e.checkMove(sel,s,false);
+  if(r.ok){e.checkMove(sel,s,true);syncTT();view.sel=-1;toast('Đã đổi sang '+slotName(s));render()}
+  else if(u>=0){view.sel=u;render();toast(r.why,3500)}
+  else toast(r.why||'Không đặt được',3500);
+}
+function runSolve(mode){
+  if(worker)return;
+  const iss=checkData().filter(x=>x[0]==='bad');
+  if(iss.length){showIssues();toast('Dữ liệu còn lỗi đỏ — sửa trước khi xếp');return}
+  const {inp:inpt,keys}=buildInput(state);
+  const init=mode==='continue'?keys.map(k=>state.tt[k]?state.tt[k].s:-1):null;
+  const opts={time:state.opts.time||20,reset:mode!=='continue'};
+  $('#runBox').style.display='block';$('#runTxt').textContent='Đang chuẩn bị…';
+  const finish=r=>{worker=null;const old=state.tt;const tt={};keys.forEach((k,u)=>{if(r.pos[u]>=0)tt[k]={s:r.pos[u],lock:!!(old[k]&&old[k].lock)}});state.tt=tt;save();view.sel=-1;
+    render();const s=r.stats;toast(`Xong sau ${(r.ms/1000).toFixed(1)} s · đã xếp ${s.done}/${s.lessons} tiết · trống giữa buổi ${s.classGaps} · tiết lủng GV ${s.teacherGaps}`,6000)};
+  const fallback=()=>{worker='main';$('#runTxt').textContent='Đang xếp (trình duyệt sẽ đứng trong '+opts.time+' giây)…';
+    setTimeout(()=>{const en=createEngine(inpt);if(init)en.load(init);const r=en.solve(opts,null);finish(r)},60)};
+  try{
+    const src=document.getElementById('engine-src').textContent+`;self.onmessage=e=>{const E=createEngine(e.data.inp);if(e.data.init)E.load(e.data.init);const r=E.solve(e.data.opts,p=>self.postMessage({type:'p',p}));self.postMessage({type:'d',r})}`;
+    const w=new Worker(URL.createObjectURL(new Blob([src],{type:'text/javascript'})));worker=w;
+    w.onmessage=ev=>{if(ev.data.type==='p'){const p=ev.data.p;$('#runTxt').textContent=`${p.phase}… đã đặt ${p.placed}/${p.total} khối tiết`;$('#runBar').style.width=p.pct+'%'}else{w.terminate();finish(ev.data.r)}};
+    w.onerror=ev=>{ev.preventDefault();w.terminate();worker=null;fallback()};
+    w.postMessage({inp:inpt,init,opts});
+  }catch(err){worker=null;fallback()}
+}
+function showIssues(){const iss=checkData();$('#issues').innerHTML=`<div class="card" style="margin:10px 0 0;background:#fffdf7"><b>Kết quả kiểm tra:</b> ${iss.length?`<ul class="issues">${iss.map(i=>`<li><span class="pill ${i[0]}">${i[0]==='bad'?'Lỗi':'Lưu ý'}</span> ${esc(i[1])}</li>`).join('')}</ul>`:'<span class="pill ok">Dữ liệu hợp lệ, có thể xếp</span>'}</div>`}
+/* ---------- Bước 5: xuất ---------- */
+function r5(){
+  engine();const groups=[...new Set(state.teachers.map(t=>t.group||'Khác'))];
+  $('#app').innerHTML=guide(4)+`<div class="grid2">
+  <div class="card"><h3>Xuất Excel (.xlsx)</h3>
+   <div class="row"><button class="btn pri" data-act="xls" data-m="allC">TKB toàn trường (theo lớp)</button><button class="btn pri" data-act="xls" data-m="allT">TKB toàn trường (theo GV)</button></div>
+   <div class="row" style="margin-top:8px"><button class="btn" data-act="xls" data-m="class">Mỗi lớp một sheet</button><button class="btn" data-act="xls" data-m="teacher">Mỗi GV một sheet</button><button class="btn" data-act="xls" data-m="group">Theo tổ bộ môn</button><button class="btn" data-act="xls" data-m="pc">Bảng phân công</button></div>
+   <p class="hint">${window.XLSX?'Sẵn sàng.':'Chưa tải được thư viện Excel (máy đang offline) — sẽ xuất dạng .xls đơn giản.'}</p></div>
+  <div class="card"><h3>In / Lưu PDF</h3>
+   <div class="row"><button class="btn pri" data-act="print" data-m="class">In TKB từng lớp</button><button class="btn pri" data-act="print" data-m="teacher">In TKB từng GV</button></div>
+   <div class="row" style="margin-top:8px"><button class="btn" data-act="print" data-m="allC">In bảng toàn trường</button>
+    <select id="prG"><option value="">— Tổ —</option>${groups.map(g=>`<option>${esc(g)}</option>`).join('')}</select><button class="btn" data-act="print" data-m="group">In TKB GV của tổ</button></div>
+   <p class="hint">Trong hộp thoại in, chọn “Lưu dưới dạng PDF” để có file PDF. Khổ A4 ngang.</p></div>
+  <div class="card"><h3>Sao lưu dữ liệu</h3><div class="row"><button class="btn" data-act="saveFile">Lưu file dữ liệu (.json)</button><button class="btn" data-act="openFile">Mở file dữ liệu</button></div>
+   <p class="hint">Dữ liệu tự lưu trong trình duyệt của máy này. File .json dùng để chuyển sang máy khác hoặc gửi cho người cùng xếp.</p></div></div>`;
+}
+function gridAOA(mode,idx){
+  const Pn=P(),N=NS(),arr=mode==='teacher'?E.tg:E.cg;const rows=[['Buổi','Tiết',...Array.from({length:state.days},(_,d)=>DAYN[d])]];
+  for(let p=0;p<Pn;p++){const r=[p<state.am?'Sáng':'Chiều',p<state.am?p+1:p-state.am+1];
+    for(let d=0;d<state.days;d++){const u=arr[idx*N+d*Pn+p];if(u<0){r.push('');continue}const x=E.units[u],s=state.subjects[x.sub];
+      r.push(mode==='teacher'?state.classes[x.c].name+' - '+(s.short||s.name):(s.name)+(x.t>=0?' - '+(state.teachers[x.t].short||state.teachers[x.t].name):''))}
+    rows.push(r)}
+  return rows;
+}
+function allAOA(mode,ents){
+  const Pn=P(),N=NS(),arr=mode==='allT'?E.tg:E.cg;const rows=[['Thứ','Tiết',...ents.map(x=>x.ent.name)]];
+  for(let d=0;d<state.days;d++)for(let p=0;p<Pn;p++){const s=d*Pn+p;rows.push([p===0?DAYN[d]:'',p<state.am?'S'+(p+1):'C'+(p-state.am+1),...ents.map(x=>{const u=arr[x.i*N+s];if(u<0)return '';const un=E.units[u],sb=state.subjects[un.sub];
+    return mode==='allT'?state.classes[un.c].name+'-'+(sb.short||sb.name):(sb.short||sb.name)+(un.t>=0?'-'+(state.teachers[un.t].short||''):'')})])}
+  return rows;
+}
+function exportXLS(m){
+  engine();const head=[[state.school.name],['THỜI KHOÁ BIỂU · Năm học '+state.school.year+' · '+state.school.hk+(state.school.apply?' · Áp dụng từ '+state.school.apply:'')],[]];
+  const sheets=[];const safe=n=>String(n).replace(/[\\\/\?\*\[\]:]/g,'-').slice(0,31)||'Sheet';
+  const T=state.teachers.map((t,i)=>({ent:t,i})),Cs=state.classes.map((c,i)=>({ent:c,i}));
+  if(m==='allC')sheets.push(['Toàn trường - lớp',head.concat(allAOA('allC',Cs))]);
+  if(m==='allT')sheets.push(['Toàn trường - GV',head.concat(allAOA('allT',T))]);
+  if(m==='class')Cs.forEach(x=>{const c=x.ent,g=teach(c.gvcn);sheets.push([safe(c.name),head.concat([['Lớp '+c.name+(g?' · GVCN: '+g.name:'')]],gridAOA('class',x.i))])});
+  if(m==='teacher')T.forEach(x=>sheets.push([safe(x.ent.short||x.ent.name)+'_'+x.i,head.concat([['GV: '+x.ent.name+' · Tổ '+(x.ent.group||'')+' · '+loadOf(x.ent.id)+' tiết/tuần']],gridAOA('teacher',x.i))]));
+  if(m==='group'){const gs=[...new Set(state.teachers.map(t=>t.group||'Khác'))];gs.forEach(g=>sheets.push([safe(g),head.concat([['Tổ '+g]],allAOA('allT',T.filter(x=>(x.ent.group||'Khác')===g)))]))}
+  if(m==='pc'){const subs=state.subjects;const rows=[['Lớp',...subs.map(s=>s.name),'Tổng']];state.classes.forEach(c=>{let sum=0;rows.push([c.name,...subs.map(s=>{const a=state.assigns.find(x=>x.c===c.id&&x.sub===s.id);if(!a)return '';sum+=+a.n;const t=teach(a.t);return a.n+(t?' - '+t.name:'')}),sum])});
+    const rows2=[['Giáo viên','Tổ','Tổng tiết','Chi tiết']];state.teachers.forEach(t=>rows2.push([t.name,t.group||'',loadOf(t.id),state.assigns.filter(a=>a.t===t.id).map(a=>(cls(a.c)||{}).name+' '+((subj(a.sub)||{}).short||'')+':'+a.n).join(', ')]));
+    sheets.push(['Phân công lớp',head.concat(rows)],['Phân công GV',head.concat(rows2)])}
+  const fname='TKB_'+(state.school.name||'truong').replace(/\s+/g,'_')+'_'+m+'.xlsx';
+  if(window.XLSX){const wb=XLSX.utils.book_new();const used={};sheets.forEach(([n,aoa])=>{let nm=n;let k=1;while(used[nm])nm=n.slice(0,28)+'_'+(k++);used[nm]=1;const ws=XLSX.utils.aoa_to_sheet(aoa);ws['!cols']=aoa[3]?aoa[3].map((_,i)=>({wch:i<2?7:16})):[];XLSX.utils.book_append_sheet(wb,ws,nm)});XLSX.writeFile(wb,fname)}
+  else{let h='<html><meta charset="utf-8"><body>';sheets.forEach(([n,aoa])=>{h+='<h3>'+esc(n)+'</h3><table border="1">'+aoa.map(r=>'<tr>'+r.map(c=>'<td>'+esc(c)+'</td>').join('')+'</tr>').join('')+'</table><br>'});download(fname.replace('.xlsx','.xls'),h+'</body></html>','application/vnd.ms-excel')}
+  toast('Đã xuất '+sheets.length+' sheet');
+}
+function pageGrid(title,sub,aoa,small){
+  return `<div class="pg ${small?'small':''}"><div class="top"><div><b>${esc(state.school.name)}</b></div><div>Năm học ${esc(state.school.year)} · ${esc(state.school.hk)}</div></div>
+  <h2>${esc(title)}</h2><div class="sub">${esc(sub)}${state.school.apply?' · Áp dụng từ ngày '+esc(state.school.apply):''}</div>
+  <table>${aoa.map((r,i)=>'<tr>'+r.map(c=>i===0?'<th>'+esc(c)+'</th>':'<td>'+esc(c)+'</td>').join('')+'</tr>').join('')}</table>
+  <div class="sign"><div>${esc(state.school.head||'')}<br><br><br><br></div></div></div>`;
+}
+function printTKB(m){
+  engine();let h='';
+  if(m==='class')state.classes.forEach((c,i)=>{const g=teach(c.gvcn);h+=pageGrid('THỜI KHOÁ BIỂU LỚP '+c.name,g?'GVCN: '+g.name:'',gridAOA('class',i))});
+  if(m==='teacher'||m==='group'){const g=m==='group'?$('#prG').value:null;if(m==='group'&&!g)return toast('Chọn tổ trước');
+    state.teachers.forEach((t,i)=>{if(g&&(t.group||'Khác')!==g)return;h+=pageGrid('THỜI KHOÁ BIỂU GIÁO VIÊN',t.name+' · Tổ '+(t.group||'')+' · '+loadOf(t.id)+' tiết/tuần',gridAOA('teacher',i))})}
+  if(m==='allC'){const Cs=state.classes.map((c,i)=>({ent:c,i}));for(let k=0;k<Cs.length;k+=12)h+=pageGrid('THỜI KHOÁ BIỂU TOÀN TRƯỜNG','Các lớp '+Cs.slice(k,k+12).map(x=>x.ent.name).join(', '),allAOA('allC',Cs.slice(k,k+12)),true)}
+  $('#print').innerHTML=h;setTimeout(()=>window.print(),100);
+}
+function download(name,content,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+/* ---------- modal & sự kiện ---------- */
+function modal(h){$('#modal').innerHTML=h;$('#modal').onclick=null;$('#mask').classList.add('on')}
+function closeModal(){$('#mask').classList.remove('on')}
+$('#mask').addEventListener('mousedown',e=>{if(e.target.id==='mask')closeModal()});
+document.addEventListener('change',e=>{
+  const el=e.target;
+  if(el.dataset.g){const path=el.dataset.g.split('.');let o=state;for(let i=0;i<path.length-1;i++)o=o[path[i]];o[path[path.length-1]]=el.dataset.num?(+el.value||0):el.value;save();if(el.dataset.rr||path[0]==='school')render();return}
+  if(el.dataset.f&&el.dataset.k){const it=byId(el.dataset.k,el.dataset.id);if(!it)return;it[el.dataset.f]=el.type==='number'?(+el.value||0):el.value;save();if(['main','grade'].includes(el.dataset.f)||el.dataset.k==='classes')render()}
+});
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]');if(!b)return;const a=b.dataset.act;
+  switch(a){
+  case 'step':step=+b.dataset.i;localStorage.setItem(LS+'-step',step);view.sel=-1;render();window.scrollTo(0,0);break;
+  case 'sample':if(state.assigns.length&&!confirm('Thay toàn bộ dữ liệu hiện tại bằng dữ liệu mẫu?'))return;state=sampleState();save();view={mode:'class',id:'',sel:-1};render();toast('Đã nạp trường mẫu 18 lớp · '+state.teachers.length+' GV. Sang bước 4 để xếp thử.');break;
+  case 'clearAll':if(!confirm('Xoá toàn bộ dữ liệu trong trình duyệt? (nên Lưu file trước)'))return;state=emptyState();save();render();break;
+  case 'saveFile':download('TKB_'+(state.school.name||'du-lieu').replace(/\s+/g,'_')+'.json',JSON.stringify(state,null,1),'application/json');break;
+  case 'openFile':$('#fileIn').click();break;
+  case 'addSub':state.subjects.push({id:uid('s'),name:'Môn mới',short:'',color:PALETTE[state.subjects.length%PALETTE.length],maxDay:2,rooms:0,forbid:'',avoid:'',fixed:''});save();render();break;
+  case 'addT':state.teachers.push({id:uid('t'),name:'Giáo viên mới',short:'',group:'',maxDay:5,maxDays:0,busy:[]});save();render();break;
+  case 'addC':state.classes.push({id:uid('c'),name:'Lớp mới',grade:10,main:'S',gvcn:'',busy:[]});save();render();break;
+  case 'del':{const k=b.dataset.k,id=b.dataset.id;const n=k==='teachers'?state.assigns.filter(x=>x.t===id).length:state.assigns.filter(x=>x.c===id||x.sub===id).length;
+    if(!confirm('Xoá mục này?'+(n?' Kèm theo '+n+' phân công liên quan'+(k==='teachers'?' sẽ mất GV':' sẽ bị xoá')+'.':'')))return;
+    state[k]=state[k].filter(x=>x.id!==id);if(k==='teachers')state.assigns.forEach(x=>{if(x.t===id)x.t=''});else state.assigns=state.assigns.filter(x=>x.c!==id&&x.sub!==id);save();render();break}
+  case 'busy':openBusy(b.dataset.k,b.dataset.id);break;
+  case 'close':closeModal();break;
+  case 'pc':openPC(b.dataset.c,b.dataset.s);break;
+  case 'importPaste':importPaste();break;
+  case 'gvcnHD':{let n=0;state.assigns.forEach(x=>{const s=subj(x.sub),c=cls(x.c);if(s&&c&&c.gvcn&&/chào cờ|sinh hoạt|hđtn|trải nghiệm/i.test(s.name+' '+s.short)){x.t=c.gvcn;n++}});save();render();toast('Đã gán GVCN cho '+n+' phân công');break}
+  case 'check':showIssues();break;
+  case 'solve':runSolve(b.dataset.m);break;
+  case 'stop':if(worker&&worker!=='main'){worker.terminate();worker=null;$('#runBox').style.display='none';toast('Đã dừng, TKB giữ nguyên như trước')}break;
+  case 'unlockAll':Object.values(state.tt).forEach(x=>x.lock=false);save();render();break;
+  case 'clearTT':if(!confirm('Xoá toàn bộ TKB đã xếp (kể cả tiết khoá)?'))return;state.tt={};save();view.sel=-1;render();break;
+  case 'cell':cellClick(+b.dataset.s,+b.dataset.u);break;
+  case 'pickU':view.sel=+b.dataset.u;{const x=E.units[view.sel];view.mode='class';view.id=state.classes[x.c].id}render();break;
+  case 'jump':{const u=+b.dataset.u,x=E.units[u];view.mode='class';view.id=state.classes[x.c].id;view.sel=u;render();break}
+  case 'desel':view.sel=-1;render();break;
+  case 'lock':{const k=KEYS[view.sel];if(!state.tt[k])return toast('Tiết chưa được xếp, không khoá được');state.tt[k].lock=!state.tt[k].lock;save();view.sel=-1;render();break}
+  case 'unplace':{const k=KEYS[view.sel];if(E.units[view.sel].kind==='fix')return toast('Tiết cố định theo môn — sửa ở bước 1');delete state.tt[k];save();view.sel=-1;render();break}
+  case 'prevE':case 'nextE':{const list=view.mode==='teacher'?state.teachers:state.classes;const i=list.findIndex(x=>x.id===view.id);const j=(i+(a==='nextE'?1:-1)+list.length)%list.length;view.id=list[j].id;view.sel=-1;render();break}
+  case 'saveVer':{const nm=prompt('Tên phương án:','Phương án '+(state.versions.length+1));if(!nm)return;state.versions.unshift({name:nm,at:new Date().toLocaleString('vi-VN'),tt:JSON.parse(JSON.stringify(state.tt)),stats:lastStats&&{done:lastStats.done,gaps:lastStats.classGaps}});save();render();break}
+  case 'restoreVer':state.tt=JSON.parse(JSON.stringify(state.versions[+b.dataset.i].tt));save();view.sel=-1;render();toast('Đã khôi phục');break;
+  case 'delVer':state.versions.splice(+b.dataset.i,1);save();render();break;
+  case 'xls':exportXLS(b.dataset.m);break;
+  case 'print':printTKB(b.dataset.m);break;
+  }
+});
+$('#fileIn').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const s=JSON.parse(r.result);if(!s.v)throw 0;state=Object.assign(emptyState(),s);save();view={mode:'class',id:'',sel:-1};render();toast('Đã mở '+f.name)}catch(err){toast('File không đúng định dạng')}};r.readAsText(f);e.target.value=''});
+render();
+</script>
+</body>
+</html>
