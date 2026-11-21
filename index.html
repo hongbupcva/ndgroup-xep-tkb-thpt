@@ -140,6 +140,7 @@ table.busy th{font-size:12px;color:var(--muted);font-weight:600;cursor:pointer}
 function createEngine(inp){
   const D=inp.D,P=inp.P,AM=inp.AM,N=D*P;
   const CL=inp.classes,TE=inp.teachers,SU=inp.subjects,UN=inp.units;
+  UN.forEach(x=>{if(!x.ts)x.ts=x.t>=0?[x.t]:[]});
   const C=Math.max(1,CL.length),T=Math.max(1,TE.length),S=Math.max(1,SU.length),U=UN.length;
   const W=Object.assign({cgap:100,lead:30,spread:12,tgap:6,tday:2,two:3,avoid:5},inp.weights||{});
   const cg=new Int32Array(C*N).fill(-1),tg=new Int32Array(T*N).fill(-1),pos=new Int32Array(U).fill(-1);
@@ -157,7 +158,7 @@ function createEngine(inp){
     if(x.sess.indexOf(sess(p))<0)return 'Môn này của lớp chỉ học buổi '+(x.sess[0]===0?'sáng':'chiều');
     for(let k=0;k<x.len;k++){
       if(cBusy[x.c][s+k])return 'Lớp '+CL[x.c].name+' nghỉ tiết này';
-      if(x.t>=0&&tBusy[x.t][s+k])return 'GV '+TE[x.t].name+' đăng ký bận tiết này';
+      for(const t of x.ts)if(tBusy[t][s+k])return 'GV '+TE[t].name+' đăng ký bận tiết này';
       if(forbidM[x.sub*P+(p+k)])return 'Môn '+SU[x.sub].name+' không xếp vào tiết này';
     }
     return '';
@@ -171,28 +172,28 @@ function createEngine(inp){
   }
   function place(u,s){
     const x=UN[u];pos[u]=s;
-    for(let k=0;k<x.len;k++){cg[x.c*N+s+k]=u;if(x.t>=0)tg[x.t*N+s+k]=u;room[x.sub*N+s+k]++}
+    for(let k=0;k<x.len;k++){cg[x.c*N+s+k]=u;for(const t of x.ts)tg[t*N+s+k]=u;room[x.sub*N+s+k]++}
     const d=(s/P)|0;subDay[(x.c*D+d)*S+x.sub]+=x.len;
-    if(x.t>=0){if(tDay[x.t*D+d]===0)tDays[x.t]++;tDay[x.t*D+d]+=x.len}
+    for(const t of x.ts){if(tDay[t*D+d]===0)tDays[t]++;tDay[t*D+d]+=x.len}
   }
   function unplace(u){
     const x=UN[u],s=pos[u];if(s<0)return;pos[u]=-1;
-    for(let k=0;k<x.len;k++){cg[x.c*N+s+k]=-1;if(x.t>=0)tg[x.t*N+s+k]=-1;room[x.sub*N+s+k]--}
+    for(let k=0;k<x.len;k++){cg[x.c*N+s+k]=-1;for(const t of x.ts)tg[t*N+s+k]=-1;room[x.sub*N+s+k]--}
     const d=(s/P)|0;subDay[(x.c*D+d)*S+x.sub]-=x.len;
-    if(x.t>=0){tDay[x.t*D+d]-=x.len;if(tDay[x.t*D+d]===0)tDays[x.t]--}
+    for(const t of x.ts){tDay[t*D+d]-=x.len;if(tDay[t*D+d]===0)tDays[t]--}
   }
   function ok1(u,s){
     if(!mask[u][s])return false;
     const x=UN[u],d=(s/P)|0,r=SU[x.sub].rooms||0;
     for(let k=0;k<x.len;k++){
       if(cg[x.c*N+s+k]>=0)return false;
-      if(x.t>=0&&tg[x.t*N+s+k]>=0)return false;
+      for(const t of x.ts)if(tg[t*N+s+k]>=0)return false;
       if(r>0&&room[x.sub*N+s+k]>=r)return false;
     }
     const md=SU[x.sub].maxDay||99;if(subDay[(x.c*D+d)*S+x.sub]+x.len>md)return false;
-    if(x.t>=0){const t=TE[x.t],td=tDay[x.t*D+d];
+    for(const ti of x.ts){const t=TE[ti],td=tDay[ti*D+d];
       if(t.maxDay&&td+x.len>t.maxDay)return false;
-      if(t.maxDays&&td===0&&tDays[x.t]>=t.maxDays)return false}
+      if(t.maxDays&&td===0&&tDays[ti]>=t.maxDays)return false}
     return true;
   }
   function why1(u,s){
@@ -200,13 +201,13 @@ function createEngine(inp){
     for(let k=0;k<x.len;k++){
       if(s+k>=N)return 'Ngoài lưới';
       const v=cg[x.c*N+s+k];if(v>=0)return 'Lớp đã có tiết '+SU[UN[v].sub].name+' ở tiết này';
-      if(x.t>=0){const w=tg[x.t*N+s+k];if(w>=0)return 'Trùng giờ: GV '+TE[x.t].name+' đang dạy lớp '+CL[UN[w].c].name};
+      for(const t of x.ts){const w=tg[t*N+s+k];if(w>=0)return 'Trùng giờ: GV '+TE[t].name+' đang dạy lớp '+CL[UN[w].c].name};
       if(r>0&&room[x.sub*N+s+k]>=r)return 'Hết phòng/sân môn '+SU[x.sub].name+' (tối đa '+r+' lớp cùng lúc)';
     }
     const md=SU[x.sub].maxDay||99;if(subDay[(x.c*D+d)*S+x.sub]+x.len>md)return 'Môn '+SU[x.sub].name+' vượt '+md+' tiết/ngày của lớp';
-    if(x.t>=0){const t=TE[x.t],td=tDay[x.t*D+d];
+    for(const ti of x.ts){const t=TE[ti],td=tDay[ti*D+d];
       if(t.maxDay&&td+x.len>t.maxDay)return 'GV '+t.name+' vượt '+t.maxDay+' tiết/ngày';
-      if(t.maxDays&&td===0&&tDays[x.t]>=t.maxDays)return 'GV '+t.name+' đã dạy đủ '+t.maxDays+' ngày/tuần'}
+      if(t.maxDays&&td===0&&tDays[ti]>=t.maxDays)return 'GV '+t.name+' đã dạy đủ '+t.maxDays+' buổi/tuần'}
     return '';
   }
   function explain(u,s){
@@ -249,7 +250,7 @@ function createEngine(inp){
     return c;
   }
   function keysCost(list){let c=0;for(let i=0;i<list.length;i+=3)c+=list[i]===0?classDay(list[i+1],list[i+2]):teacherDay(list[i+1],list[i+2]);return c}
-  function keysOf(u,s,out){if(s<0)return;const x=UN[u],d=(s/P)|0;out.push(0,x.c,d);if(x.t>=0)out.push(1,x.t,d)}
+  function keysOf(u,s,out){if(s<0)return;const x=UN[u],d=(s/P)|0;out.push(0,x.c,d);for(const t of x.ts)out.push(1,t,d)}
   function insDelta(u,s){const k=[];keysOf(u,s,k);const b=keysCost(k);place(u,s);const a=keysCost(k);unplace(u);return a-b}
   function unitsInClassDay(c,d,sub){const r=[];let prev=-1;for(let p=0;p<P;p++){const v=cg[c*N+d*P+p];if(v>=0&&v!==prev&&UN[v].sub===sub)r.push(v);prev=v}return r}
   function unitsOfTeacherDay(t,d){const r=[];let prev=-1;for(let p=0;p<P;p++){const v=tg[t*N+d*P+p];if(v>=0&&v!==prev)r.push(v);prev=v}return r}
@@ -259,7 +260,7 @@ function createEngine(inp){
     const r=SU[x.sub].rooms||0;
     for(let k=0;k<x.len;k++){
       const v=cg[x.c*N+s+k];if(v>=0&&!add(v))return null;
-      if(x.t>=0){const w=tg[x.t*N+s+k];if(w>=0&&!add(w))return null}
+      for(const t of x.ts){const w=tg[t*N+s+k];if(w>=0&&!add(w))return null}
       if(r>0){
         let used=room[x.sub*N+s+k];
         for(const z of set)if(UN[z].sub===x.sub&&pos[z]<=s+k&&pos[z]+UN[z].len>s+k)used--;
@@ -271,9 +272,9 @@ function createEngine(inp){
     const md=SU[x.sub].maxDay||99;
     let cnt=subDay[(x.c*D+d)*S+x.sub];for(const z of set)if(UN[z].c===x.c&&UN[z].sub===x.sub&&((pos[z]/P)|0)===d)cnt-=UN[z].len;
     if(cnt+x.len>md){for(const z of unitsInClassDay(x.c,d,x.sub)){if(cnt+x.len<=md)break;if(set.indexOf(z)>=0)continue;if(!add(z))return null;cnt-=UN[z].len}if(cnt+x.len>md)return null}
-    if(x.t>=0){const t=TE[x.t];let td=tDay[x.t*D+d];for(const z of set)if(UN[z].t===x.t&&((pos[z]/P)|0)===d)td-=UN[z].len;
-      if(t.maxDay&&td+x.len>t.maxDay){for(const z of unitsOfTeacherDay(x.t,d)){if(td+x.len<=t.maxDay)break;if(set.indexOf(z)>=0)continue;if(!add(z))return null;td-=UN[z].len}if(td+x.len>t.maxDay)return null}
-      if(t.maxDays&&td===0&&tDay[x.t*D+d]===0&&tDays[x.t]>=t.maxDays)return null}
+    for(const ti of x.ts){const t=TE[ti];let td=tDay[ti*D+d];for(const z of set)if(UN[z].ts.indexOf(ti)>=0&&((pos[z]/P)|0)===d)td-=UN[z].len;
+      if(t.maxDay&&td+x.len>t.maxDay){for(const z of unitsOfTeacherDay(ti,d)){if(td+x.len<=t.maxDay)break;if(set.indexOf(z)>=0)continue;if(!add(z))return null;td-=UN[z].len}if(td+x.len>t.maxDay)return null}
+      if(t.maxDays&&td===0&&tDay[ti*D+d]===0&&tDays[ti]>=t.maxDays)return null}
     return set;
   }
   function load(arr){
@@ -293,8 +294,8 @@ function createEngine(inp){
     const t0=Date.now(),limit=Math.max(1,opts.time||15)*1000,end=t0+limit;
     if(opts.reset)for(let u=0;u<U;u++)if(UN[u].fixed<0)unplace(u);
     load(null);
-    const tLoad=new Float64Array(T);for(const x of UN)if(x.t>=0)tLoad[x.t]+=x.len;
-    const diff=u=>allow[u].length-(UN[u].len===2?15:0)-(UN[u].t>=0?tLoad[UN[u].t]*0.4:0)-((SU[UN[u].sub].rooms||0)>0?8:0);
+    const tLoad=new Float64Array(T);for(const x of UN)for(const t of x.ts)tLoad[t]+=x.len;
+    const diff=u=>allow[u].length-(UN[u].len===2?15:0)-UN[u].ts.reduce((a,t)=>a+tLoad[t]*0.4,0)-((SU[UN[u].sub].rooms||0)>0?8:0);
     let queue=[];for(let u=0;u<U;u++)if(pos[u]<0&&UN[u].fixed<0&&allow[u].length)queue.push(u);
     queue.sort((a,b)=>diff(b)-diff(a)+(Math.random()-.5)*2);
     const ej=new Float64Array(U);let lastP=0,it=0;
@@ -401,14 +402,14 @@ function buildInput(st){
   const units=[],keys=[];
   for(const a of st.assigns){
     const c=cI.get(a.c),sub=sI.get(a.sub);const n=+a.n||0;if(c==null||sub==null||n<=0)continue;
-    const t=a.t&&tI.has(a.t)?tI.get(a.t):-1;const cl=st.classes[c],m=cl.main==='C'?1:0;
+    const t=a.t&&tI.has(a.t)?tI.get(a.t):-1;const ts=[a.t].concat(a.co||[]).filter((x,i,arr)=>x&&tI.has(x)&&arr.indexOf(x)===i).map(x=>tI.get(x));const cl=st.classes[c],m=cl.main==='C'?1:0;
     const sess=a.buoi==='phu'?[1-m]:a.buoi==='tuy'?[0,1]:[m];
     const dbl=Math.max(0,Math.min(+a.dbl||0,Math.floor(n/2)));const sj=st.subjects[sub];
     for(let i=0;i<n-dbl;i++){
       const len=i<dbl?2:1,key=a.id+'#'+i,tt=st.tt&&st.tt[key];let fixed=-1,kind='';
       if(tt&&tt.lock&&tt.s>=0&&tt.s<N){fixed=tt.s;kind='lock'}
       else if(i===dbl&&sj.fixed){const f=parseFixed(sj.fixed,sess[0],st);if(f>=0){fixed=f;kind='fix'}}
-      units.push({c,t,sub,len,sess,fixed,kind,a:a.id});keys.push(key);
+      units.push({c,t:ts.length?ts[0]:-1,ts,sub,len,sess,fixed,kind,a:a.id});keys.push(key);
     }
   }
   const inp={D,P,AM:st.am,weights:st.weights,
@@ -525,7 +526,7 @@ function r1(){
   </table></div></div>`;
 }
 /* ---------- Bước 2 ---------- */
-function loadOf(tid){return state.assigns.filter(a=>a.t===tid).reduce((s,a)=>s+(+a.n||0),0)}
+function loadOf(tid){return state.assigns.filter(a=>a.t===tid||(a.co||[]).includes(tid)).reduce((s,a)=>s+(+a.n||0),0)}
 function r2(){
   const groups=[...new Set(state.teachers.map(t=>t.group).filter(Boolean))];
   $('#app').innerHTML=guide(1)+`
@@ -557,11 +558,11 @@ function r3(){
   <p class="hint">Mỗi ô: <b>số tiết</b> · GV. Ký hiệu: <b>Đ</b> = có tiết đôi, <b>P</b> = học buổi phụ, <b>±</b> = buổi nào cũng được. Bấm ô để sửa.</p>
   <div class="tw" style="max-height:70vh"><table class="t pc"><tr><th style="text-align:left">Lớp</th>${subs.map(s=>`<th><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${s.color}"></span> ${esc(s.short||s.name)}</th>`).join('')}<th>Tổng</th></tr>
   ${cs.map(c=>{let sum=0;return `<tr><td><b>${esc(c.name)}</b> <span class="pill">${c.main==='C'?'Chiều':'Sáng'}</span></td>${subs.map(s=>{const a=A[c.id+'|'+s.id];if(a){sum+=+a.n||0;tot[s.id]=(tot[s.id]||0)+(+a.n||0)}
-    const t=a&&teach(a.t);return `<td class="c" data-act="pc" data-c="${c.id}" data-s="${s.id}">${a?`<span class="n">${a.n}</span>${a.dbl>0?' Đ':''}${a.buoi==='phu'?' P':a.buoi==='tuy'?' ±':''}<span class="g">${t?esc(t.short||t.name):'<span style="color:var(--bad)">chưa có GV</span>'}</span>`:'<span style="color:#d4d4d4">+</span>'}</td>`}).join('')}<td><b>${sum}</b></td></tr>`}).join('')}
+    const t=a&&teach(a.t);return `<td class="c" data-act="pc" data-c="${c.id}" data-s="${s.id}">${a?`<span class="n">${a.n}</span>${a.dbl>0?' Đ':''}${a.buoi==='phu'?' P':a.buoi==='tuy'?' ±':''}<span class="g">${t?esc(t.short||t.name)+((a.co||[]).length?' +'+a.co.length:''):'<span style="color:var(--bad)">chưa có GV</span>'}</span>`:'<span style="color:#d4d4d4">+</span>'}</td>`}).join('')}<td><b>${sum}</b></td></tr>`}).join('')}
   <tr><td><b>Tổng</b></td>${subs.map(s=>`<td style="text-align:center"><b>${tot[s.id]||0}</b></td>`).join('')}<td></td></tr>
   </table></div></div>
   <div class="card"><h3>Dán phân công từ Excel</h3>
-  <p class="hint">Mỗi dòng: <b>Lớp | Môn | Giáo viên | Số tiết | Số cặp tiết đôi | Buổi (chinh/phu/tuy)</b> — copy các cột từ Excel rồi dán. Lớp/môn/GV chưa có sẽ được tạo mới (tên lớp bắt đầu bằng số khối, ví dụ 10A1).</p>
+  <p class="hint">Mỗi dòng: <b>Lớp | Môn | Giáo viên (nhiều GV luân phiên: cách nhau dấu ;) | Số tiết | Số cặp tiết đôi | Buổi (chinh/phu/tuy)</b> — copy các cột từ Excel rồi dán. Lớp/môn/GV chưa có sẽ được tạo mới (tên lớp bắt đầu bằng số khối, ví dụ 10A1).</p>
   <textarea id="paste" rows="6" style="width:100%" placeholder="10A1	Toán	Nguyễn Văn An	3	0	chinh"></textarea>
   <div class="row" style="margin-top:8px"><button class="btn pri" data-act="importPaste">Nhập phân công</button><label class="row"><input type="checkbox" id="pasteReplace"> Xoá phân công cũ trước khi nhập</label></div></div>`;
 }
@@ -570,13 +571,15 @@ function openPC(cid,sid){
   const ts=[...state.teachers].sort((x,y)=>{const ex=state.assigns.some(z=>z.t===x.id&&z.sub===sid)?0:1,ey=state.assigns.some(z=>z.t===y.id&&z.sub===sid)?0:1;return ex-ey||x.name.localeCompare(y.name,'vi')});
   modal(`<h3>Phân công: ${esc(s.name)} — Lớp ${esc(c.name)}</h3><div class="form">
    <label class="f">Giáo viên<select id="mT"><option value="">— chưa phân công GV —</option>${ts.map(t=>`<option value="${t.id}" ${a&&a.t===t.id?'selected':''}>${esc(t.name)} (${esc(t.group||'')}) · ${loadOf(t.id)} tiết</option>`).join('')}</select></label>
+   <label class="f" style="grid-column:1/-1">GV dạy luân phiên cùng tiết (giữ ô đó trống cho cả các GV này)<select id="mCo" multiple size="5">${ts.map(t=>`<option value="${t.id}" ${a&&(a.co||[]).includes(t.id)?'selected':''}>${esc(t.name)}</option>`).join('')}</select></label>
    <label class="f">Số tiết/tuần<input id="mN" type="number" min="0" max="15" value="${a?a.n:2}"></label>
    <label class="f">Số cặp tiết đôi<input id="mD" type="number" min="0" max="7" value="${a?a.dbl:0}"></label>
    <label class="f">Buổi học<select id="mB"><option value="chinh">Buổi chính (${c.main==='C'?'chiều':'sáng'})</option><option value="phu" ${a&&a.buoi==='phu'?'selected':''}>Buổi phụ (${c.main==='C'?'sáng':'chiều'})</option><option value="tuy" ${a&&a.buoi==='tuy'?'selected':''}>Buổi nào cũng được</option></select></label></div>
    <div class="row" style="margin-top:14px"><button class="btn pri" id="mSave">Lưu</button><button class="btn" id="mGrade">Lưu & áp số tiết/tiết đôi/buổi cho cả khối ${c.grade}</button>${a?'<button class="btn del" id="mDel">Xoá phân công</button>':''}<span class="sp" style="flex:1"></span><button class="btn" data-act="close">Đóng</button></div>`);
   const put=(cc)=>{let x=state.assigns.find(z=>z.c===cc&&z.sub===sid);if(!x){x={id:uid('a'),c:cc,sub:sid,t:'',n:0,dbl:0,buoi:'chinh'};state.assigns.push(x)}x.n=+$('#mN').value||0;x.dbl=+$('#mD').value||0;x.buoi=$('#mB').value;return x};
-  $('#mSave').onclick=()=>{const x=put(cid);x.t=$('#mT').value;if(!x.n)state.assigns=state.assigns.filter(z=>z!==x);save();closeModal();render()};
-  $('#mGrade').onclick=()=>{const x=put(cid);x.t=$('#mT').value;state.classes.filter(z=>z.grade==c.grade&&z.id!==cid).forEach(z=>put(z.id));state.assigns=state.assigns.filter(z=>z.n>0);save();closeModal();render();toast('Đã áp cho cả khối '+c.grade+' (GV các lớp khác giữ nguyên)')};
+  const coOf=()=>[...$('#mCo').selectedOptions].map(o=>o.value).filter(v=>v!==$('#mT').value);
+  $('#mSave').onclick=()=>{const x=put(cid);x.t=$('#mT').value;x.co=coOf();if(!x.n)state.assigns=state.assigns.filter(z=>z!==x);save();closeModal();render()};
+  $('#mGrade').onclick=()=>{const x=put(cid);x.t=$('#mT').value;x.co=coOf();state.classes.filter(z=>z.grade==c.grade&&z.id!==cid).forEach(z=>put(z.id));state.assigns=state.assigns.filter(z=>z.n>0);save();closeModal();render();toast('Đã áp cho cả khối '+c.grade+' (GV các lớp khác giữ nguyên)')};
   if(a)$('#mDel').onclick=()=>{state.assigns=state.assigns.filter(z=>z!==a);save();closeModal();render()};
 }
 function importPaste(){
@@ -586,10 +589,10 @@ function importPaste(){
   txt.split(/\r?\n/).forEach(line=>{const f=line.split(/\t|\|/).map(x=>x.trim());if(f.length<4||!f[0]||!f[1]){bad++;return}
     let c=state.classes.find(x=>norm(x.name)===norm(f[0]));if(!c){const g=parseInt(f[0])||10;c={id:uid('c'),name:f[0],grade:g,main:'S',gvcn:'',busy:[]};state.classes.push(c)}
     let s=state.subjects.find(x=>norm(x.name)===norm(f[1])||norm(x.short)===norm(f[1]));if(!s){s={id:uid('s'),name:f[1],short:f[1],color:PALETTE[state.subjects.length%PALETTE.length],maxDay:2,rooms:0,forbid:'',avoid:'',fixed:''};state.subjects.push(s)}
-    let t=null;if(f[2]){t=state.teachers.find(x=>norm(x.name)===norm(f[2])||norm(x.short)===norm(f[2]));if(!t){t={id:uid('t'),name:f[2],short:f[2].split(' ').pop(),group:'',maxDay:5,maxDays:0,busy:[]};state.teachers.push(t)}}
+    const tl=String(f[2]||'').split(/[;+]/).map(x=>x.trim()).filter(Boolean).map(nm=>{let t=state.teachers.find(x=>norm(x.name)===norm(nm)||norm(x.short)===norm(nm));if(!t){t={id:uid('t'),name:nm,short:nm.split(' ').pop(),group:'',maxDay:5,maxDays:0,busy:[]};state.teachers.push(t)}return t});const t=tl[0]||null;
     const b=norm(f[5]);const buoi=b.startsWith('p')?'phu':b.startsWith('t')?'tuy':'chinh';
     let a=state.assigns.find(x=>x.c===c.id&&x.sub===s.id);if(!a){a={id:uid('a'),c:c.id,sub:s.id};state.assigns.push(a)}
-    Object.assign(a,{t:t?t.id:'',n:parseInt(f[3])||0,dbl:parseInt(f[4])||0,buoi});n++});
+    Object.assign(a,{t:t?t.id:'',co:tl.slice(1).map(x=>x.id),n:parseInt(f[3])||0,dbl:parseInt(f[4])||0,buoi});n++});
   state.assigns=state.assigns.filter(a=>a.n>0);save();render();toast('Đã nhập '+n+' dòng'+(bad?' · bỏ qua '+bad+' dòng sai':''));
 }
 /* ---------- Lịch bận ---------- */
@@ -622,7 +625,7 @@ function checkData(){
     const as=state.assigns.filter(a=>a.c===c.id);const sum=b=>as.filter(a=>(a.buoi||'chinh')===b).reduce((s,a)=>s+(+a.n||0),0);
     if(sum('chinh')>sl(m))iss.push(['bad',`Lớp ${c.name}: ${sum('chinh')} tiết buổi chính > ${sl(m)} ô trống`]);
     if(sum('phu')>sl(1-m))iss.push(['bad',`Lớp ${c.name}: ${sum('phu')} tiết buổi phụ > ${sl(1-m)} ô trống`]);
-    as.forEach(a=>{const s=subj(a.sub);if(!a.t)iss.push(['warn',`Lớp ${c.name} – ${s?s.name:'?'}: chưa có GV`]);if(a.dbl*2>a.n)iss.push(['warn',`Lớp ${c.name} – ${s?s.name:'?'}: số cặp tiết đôi lớn hơn số tiết`]);
+    as.forEach(a=>{const s=subj(a.sub);if(!a.t&&!(s&&s.fixed))iss.push(['warn',`Lớp ${c.name} – ${s?s.name:'?'}: chưa có GV`]);if(a.dbl*2>a.n)iss.push(['warn',`Lớp ${c.name} – ${s?s.name:'?'}: số cặp tiết đôi lớn hơn số tiết`]);
       if(s&&s.maxDay&&a.dbl>0&&s.maxDay<2)iss.push(['bad',`Môn ${s.name} có tiết đôi nhưng tối đa ${s.maxDay} tiết/ngày`]);
       if(s&&s.maxDay&&Math.ceil(a.n/s.maxDay)>state.days)iss.push(['bad',`Lớp ${c.name} – ${s.name}: ${a.n} tiết không đủ ngày với tối đa ${s.maxDay} tiết/ngày`])})});
   state.teachers.forEach(t=>{const l=loadOf(t.id);const free=NS()-(t.busy||[]).length;if(l>free)iss.push(['bad',`GV ${t.name}: ${l} tiết > ${free} ô rảnh`]);
@@ -663,12 +666,13 @@ function r4(){
   if($('#vId'))$('#vId').onchange=e=>{view.id=e.target.value;render()};
   drawGrid();
 }
-function unitLabel(u){const x=E.units[u];const c=state.classes[x.c],s=state.subjects[x.sub],t=x.t>=0?state.teachers[x.t]:null;return `${c.name} · ${s.name}${x.len===2?' (đôi)':''} · ${t?t.short||t.name:'—'}`}
+function tNames(x,full){return x.ts.length?x.ts.map(i=>full?state.teachers[i].name:(state.teachers[i].short||state.teachers[i].name)).join(', '):''}
+function unitLabel(u){const x=E.units[u];const c=state.classes[x.c],s=state.subjects[x.sub];return `${c.name} · ${s.name}${x.len===2?' (đôi)':''} · ${tNames(x,true)||'—'}`}
 function isLocked(u){const k=KEYS[u];return !!(state.tt[k]&&state.tt[k].lock)}
 function cellHTML(u,mode,second){
-  const x=E.units[u],s=state.subjects[x.sub],t=x.t>=0?state.teachers[x.t]:null,c=state.classes[x.c];
+  const x=E.units[u],s=state.subjects[x.sub],c=state.classes[x.c];
   const lk=x.kind==='fix'?'📌':isLocked(u)?'🔒':'';
-  const top=mode==='teacher'?c.name:(s.short||s.name),bot=mode==='teacher'?(s.short||s.name):(t?t.short||t.name:'');
+  const top=mode==='teacher'?c.name:(s.short||s.name),bot=mode==='teacher'?(s.short||s.name):tNames(x);
   return `${lk?`<span class="lk">${lk}</span>`:''}<b>${esc(top)}</b><small>${esc(bot)}${x.len===2?(second?' ▲':' ▼'):''}</small>`;
 }
 function drawGrid(){
@@ -678,7 +682,7 @@ function drawGrid(){
     let h=`<div class="tw" style="max-height:72vh"><table class="big"><tr><th>Thứ</th><th>Tiết</th>${ents.map(x=>`<th>${esc(view.mode==='allC'?x.name:(x.short||x.name))}</th>`).join('')}</tr>`;
     for(let d=0;d<state.days;d++)for(let p=0;p<Pn;p++){const s=d*Pn+p;
       h+=`<tr>${p===0?`<th class="d" rowspan="${Pn}">${DAYN[d]}</th>`:''}<th>${p<state.am?'S'+(p+1):'C'+(p-state.am+1)}</th>${ents.map((x,i)=>{const u=arr[i*N+s];if(u<0)return '<td></td>';const un=e.units[u],sb=state.subjects[un.sub];
-        const txt=view.mode==='allC'?(sb.short||sb.name)+(un.t>=0?'-'+(state.teachers[un.t].short||''):''):state.classes[un.c].name+'-'+(sb.short||'');
+        const txt=view.mode==='allC'?(sb.short||sb.name)+(un.ts.length?'-'+tNames(un):''):state.classes[un.c].name+'-'+(sb.short||'');
         return `<td class="x" style="background:${sb.color}" data-act="jump" data-u="${u}" title="${esc(unitLabel(u))}">${esc(txt)}</td>`}).join('')}</tr>`}
     g.innerHTML=h+'</table></div>';return;
   }
@@ -755,14 +759,14 @@ function gridAOA(mode,idx){
   const Pn=P(),N=NS(),arr=mode==='teacher'?E.tg:E.cg;const rows=[['Buổi','Tiết',...Array.from({length:state.days},(_,d)=>DAYN[d])]];
   for(let p=0;p<Pn;p++){const r=[p<state.am?'Sáng':'Chiều',p<state.am?p+1:p-state.am+1];
     for(let d=0;d<state.days;d++){const u=arr[idx*N+d*Pn+p];if(u<0){r.push('');continue}const x=E.units[u],s=state.subjects[x.sub];
-      r.push(mode==='teacher'?state.classes[x.c].name+' - '+(s.short||s.name):(s.name)+(x.t>=0?' - '+(state.teachers[x.t].short||state.teachers[x.t].name):''))}
+      r.push(mode==='teacher'?state.classes[x.c].name+' - '+(s.short||s.name):(s.name)+(x.ts.length?' - '+tNames(x):''))}
     rows.push(r)}
   return rows;
 }
 function allAOA(mode,ents){
   const Pn=P(),N=NS(),arr=mode==='allT'?E.tg:E.cg;const rows=[['Thứ','Tiết',...ents.map(x=>x.ent.name)]];
   for(let d=0;d<state.days;d++)for(let p=0;p<Pn;p++){const s=d*Pn+p;rows.push([p===0?DAYN[d]:'',p<state.am?'S'+(p+1):'C'+(p-state.am+1),...ents.map(x=>{const u=arr[x.i*N+s];if(u<0)return '';const un=E.units[u],sb=state.subjects[un.sub];
-    return mode==='allT'?state.classes[un.c].name+'-'+(sb.short||sb.name):(sb.short||sb.name)+(un.t>=0?'-'+(state.teachers[un.t].short||''):'')})])}
+    return mode==='allT'?state.classes[un.c].name+'-'+(sb.short||sb.name):(sb.short||sb.name)+(un.ts.length?'-'+tNames(un):'')})])}
   return rows;
 }
 function exportXLS(m){
@@ -819,7 +823,7 @@ document.addEventListener('click',e=>{
   case 'addC':state.classes.push({id:uid('c'),name:'Lớp mới',grade:10,main:'S',gvcn:'',busy:[]});save();render();break;
   case 'del':{const k=b.dataset.k,id=b.dataset.id;const n=k==='teachers'?state.assigns.filter(x=>x.t===id).length:state.assigns.filter(x=>x.c===id||x.sub===id).length;
     if(!confirm('Xoá mục này?'+(n?' Kèm theo '+n+' phân công liên quan'+(k==='teachers'?' sẽ mất GV':' sẽ bị xoá')+'.':'')))return;
-    state[k]=state[k].filter(x=>x.id!==id);if(k==='teachers')state.assigns.forEach(x=>{if(x.t===id)x.t=''});else state.assigns=state.assigns.filter(x=>x.c!==id&&x.sub!==id);save();render();break}
+    state[k]=state[k].filter(x=>x.id!==id);if(k==='teachers')state.assigns.forEach(x=>{if(x.t===id)x.t=(x.co||[]).shift()||'';x.co=(x.co||[]).filter(z=>z!==id)});else state.assigns=state.assigns.filter(x=>x.c!==id&&x.sub!==id);save();render();break}
   case 'busy':openBusy(b.dataset.k,b.dataset.id);break;
   case 'close':closeModal();break;
   case 'pc':openPC(b.dataset.c,b.dataset.s);break;
